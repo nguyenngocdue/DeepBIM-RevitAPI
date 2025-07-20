@@ -1,0 +1,16 @@
+﻿<RevitAddIns>
+    <AddIn Type="Application">
+        <Name>DeepBIM</Name>
+        <Assembly>DeepBIM\DeepBIM.dll</Assembly>
+        <AddInId>CEDD79B8-9879-4AB6-B069-E50428683212</AddInId>
+        <FullClassName>DeepBIM.Application</FullClassName>
+        <VendorId>DeepBIM-Development</VendorId>
+      <VendorDescription>DeepBIM - Advanced BIM Tools and Automation Solutions</VendorDescription>
+      <VendorEmail>deepbimnet@gmail.com</VendorEmail>
+      <VendorUrl>https://deepbim.net</VendorUrl>
+    </AddIn>
+    <ManifestSettings>
+        <UseRevitContext>False</UseRevitContext>
+        <ContextName>DeepBIM</ContextName>
+    </ManifestSettings>
+</RevitAddIns>
