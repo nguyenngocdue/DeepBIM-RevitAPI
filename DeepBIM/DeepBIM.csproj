@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
+  <PropertyGroup>
         <UseWPF>true</UseWPF>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
@@ -39,6 +38,10 @@
 
     <!-- Launch configuration -->
     <PropertyGroup>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+      
         <StartAction>Program</StartAction>
         <StartProgram>C:\Program Files\Autodesk\Revit $(RevitVersion)\Revit.exe</StartProgram>
         <StartArguments>/language ENG</StartArguments>
@@ -48,24 +51,29 @@
     <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
     <PropertyGroup>
         <IsRepackable>false</IsRepackable>
-        <DeployRevitAddin>true</DeployRevitAddin>
+        <DeployRevitAddin>false</DeployRevitAddin>
+        <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     </PropertyGroup>
 
     <ItemGroup>
         <!-- Revit References -->
-        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1"/>
-        <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*"/>
-        <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*"/>
+        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" />
+        <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
 
         <!-- MVVM -->
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <Resource Include="Resources\Icons\RibbonIcon16.png"/>
-        <Resource Include="Resources\Icons\RibbonIcon32.png"/>
+        <Resource Include="Resources\Icons\RibbonIcon16.png" />
+        <Resource Include="Resources\Icons\RibbonIcon32.png" />
     </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="xcopy /Y /F &quot;$(TargetDir)DeepBIM.dll&quot; &quot;%25AppData%25\Autodesk\Revit\Addins\2025\&quot;" />
+    </Target>
 
 </Project>

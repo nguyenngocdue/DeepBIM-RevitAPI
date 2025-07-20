@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.Attributes;
 using Nice3point.Revit.Toolkit.External;
+using System.Windows;
 
 namespace DeepBIM.Commands
 {
@@ -12,6 +13,7 @@ namespace DeepBIM.Commands
     {
         public override void Execute()
         {
+            MessageBox.Show("DeepBIM is starting up ok 222222222!");
         }
     }
 }
