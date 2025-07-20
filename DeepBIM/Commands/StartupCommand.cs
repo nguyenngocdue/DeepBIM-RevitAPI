@@ -13,7 +13,6 @@ namespace DeepBIM.Commands
     {
         public override void Execute()
         {
-            MessageBox.Show("DeepBIM is starting up ok 222222222!");
         }
     }
 }

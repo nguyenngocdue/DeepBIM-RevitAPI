@@ -51,8 +51,7 @@
     <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
     <PropertyGroup>
         <IsRepackable>false</IsRepackable>
-        <DeployRevitAddin>false</DeployRevitAddin>
-        <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+        <DeployRevitAddin>true</DeployRevitAddin>
     </PropertyGroup>
 
     <ItemGroup>
