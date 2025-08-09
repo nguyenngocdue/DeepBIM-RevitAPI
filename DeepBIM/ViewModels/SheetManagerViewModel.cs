@@ -1,4 +1,6 @@
 ﻿using Autodesk.Revit.UI;
+using CommunityToolkit.Mvvm.Messaging;
+using DeepBIM.Views;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,14 +14,29 @@ using System.Windows.Input;
 
 namespace DeepBIM.ViewModels
 {
-    public class SheetRow
+    public class SheetRow: INotifyPropertyChanged
     {
         public string CurrentNumber { get; set; }
         public string NewNumber { get; set; }
         public string CurrentName { get; set; }
-        public string NewName { get; set; }
+        private string _newName;
+        public string NewName
+        {
+            get => _newName;
+            set
+            {
+                if (_newName != value)
+                {
+                    _newName = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewName)));
+                }
+            }
+        }
+
 
         public ElementId NewSheetId { get; set; }   // <-- để xóa trên Revit
+        public bool IsSelected { get; internal set; }
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 
     public class SheetItem : INotifyPropertyChanged
@@ -31,6 +48,7 @@ namespace DeepBIM.ViewModels
 
         bool _isChecked;
         public bool IsChecked { get => _isChecked; set { _isChecked = value; PropertyChanged?.Invoke(this, new(nameof(IsChecked))); } }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
     }
@@ -49,10 +67,60 @@ namespace DeepBIM.ViewModels
         }
         bool _selectAll;
 
+
+        // Các quy tắc
+        private string _prefix = "";
+        private string _suffix = "";
+        private string _find = "";
+        private string _replace = "";
+        private bool _applyToName = true; // mặc định chọn Sheet Name
+
+        public string Prefix
+        {
+            get => _prefix;
+            set { _prefix = value; OnChanged(nameof(Prefix)); }
+        }
+
+        public string Suffix
+        {
+            get => _suffix;
+            set { _suffix = value; OnChanged(nameof(Suffix)); }
+        }
+
+        public string Find
+        {
+            get => _find;
+            set { _find = value; OnChanged(nameof(Find)); }
+        }
+
+        public string Replace
+        {
+            get => _replace;
+            set { _replace = value; OnChanged(nameof(Replace)); }
+        }
+
+        public bool ApplyToName
+        {
+            get => _applyToName;
+            set { _applyToName = value; _applyToNumber = !value; OnChanged(nameof(ApplyToName)); OnChanged(nameof(ApplyToNumber)); }
+        }
+
+        private bool _applyToNumber = false;
+        public bool ApplyToNumber
+        {
+            get => _applyToNumber;
+            set { _applyToNumber = value; _applyToName = !value; OnChanged(nameof(ApplyToNumber)); OnChanged(nameof(ApplyToName)); }
+        }
+
+
+        public ICommand ApplyRulesCommand { get; }
+        public ICommand RenameCommand { get; }
+
+
         private readonly Document _doc;
         public ICommand DuplicateCommand { get; }
         public ICommand DeleteSelectedSheetsCommand { get; }
-
+        public ICommand MoveToRightCommand { get; }
 
         public SheetManagerViewModel(Document doc)
         {
@@ -75,7 +143,139 @@ namespace DeepBIM.ViewModels
                  execute: DeleteSelectedSheets,
                  canExecute: () => Sheets.Any(s => s.IsChecked)
              );
+
+            MoveToRightCommand = new RelayCommand(
+                execute: MoveCheckedSheetsToRows,
+                canExecute: () => true
+            );
+
+            ApplyRulesCommand = new RelayCommand(ApplyRules);
+            RenameCommand = new RelayCommand(RenameSheets, () => Rows.Any(r => r.NewSheetId != null));
         }
+
+
+        private void RenameSheets()
+        {
+            var sheetsToRename = Rows.Where(r => r.NewSheetId != null).ToList();
+            if (!sheetsToRename.Any())
+            {
+                TaskDialog.Show("Thông báo", "Không có sheet nào đã được sao chép để đổi tên.");
+                return;
+            }
+
+            using (var tg = new TransactionGroup(_doc, "Đổi tên sheet"))
+            {
+                tg.Start();
+
+                foreach (var row in sheetsToRename)
+                {
+                    var sheet = _doc.GetElement(row.NewSheetId) as ViewSheet;
+                    if (sheet == null) continue;
+
+                    try
+                    {
+                        using (var t = new Transaction(_doc, "Đổi tên"))
+                        {
+                            t.Start();
+                            sheet.Name = row.NewName;
+                            t.Commit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        TaskDialog.Show("Lỗi", $"Không thể đổi tên sheet {row.NewNumber}: {ex.Message}");
+                    }
+                }
+
+                tg.Assimilate();
+            }
+        }
+
+
+        private void ApplyRules()
+        {
+
+            if (!ApplyToName)
+            {
+                TaskDialog.Show("Chỉ hỗ trợ Sheet Name", "Hiện tại chỉ hỗ trợ áp dụng quy tắc cho Sheet Name.");
+                return;
+            }
+
+            foreach (var row in Rows)
+            {
+                System.Diagnostics.Debug.WriteLine($"🔍 Xử lý sheet: {row.CurrentName}");
+                string name = row.CurrentName;
+
+                // Tìm và thay thế
+                if (!string.IsNullOrEmpty(Find))
+                {
+                    name = name.Replace(Find, Replace);
+                }
+
+                // Thêm tiền tố
+                if (!string.IsNullOrEmpty(Prefix))
+                {
+                    name = Prefix + name;
+                }
+
+                // Thêm hậu tố
+                if (!string.IsNullOrEmpty(Suffix))
+                {
+                    name = name + Suffix;
+                }
+
+                row.NewName = name;
+            }
+        }
+
+        public void ExecuteMoveToLeft(List<SheetRow> selectedRows)
+        {
+            foreach (var row in selectedRows.ToList())
+            {
+                // Tìm sheet tương ứng
+                var sheet = Sheets.FirstOrDefault(s =>
+                    s.Number == row.CurrentNumber &&
+                    s.Name == row.CurrentName);
+                if (sheet != null)
+                {
+                    sheet.IsChecked = false; // Bỏ tích
+                }
+
+                Rows.Remove(row); // Xóa khỏi danh sách
+            }
+        }
+
+
+        private void MoveCheckedSheetsToRows()
+        {
+            var checkedSheets = Sheets.Where(s => s.IsChecked).ToList();
+
+            if (!checkedSheets.Any())
+            {
+                TaskDialog.Show("Thông báo", "Vui lòng chọn ít nhất một bản vẽ để di chuyển.");
+                return;
+            }
+
+            foreach (var sheet in checkedSheets)
+            {
+                // Kiểm tra trùng trong Rows
+                bool alreadyExists = Rows.Any(r =>
+                    r.CurrentNumber == sheet.Number &&
+                    r.CurrentName == sheet.Name);
+
+                if (alreadyExists) continue; // Bỏ qua nếu đã có
+
+                Rows.Add(new SheetRow
+                {
+                    CurrentNumber = sheet.Number,
+                    CurrentName = sheet.Name,
+                    NewNumber = GetUniqueSheetNumber(_doc, sheet.Number),
+                    NewName = sheet.Name,
+                    NewSheetId = sheet.Id,
+                });
+            }
+        }
+
 
         private void DeleteSelectedSheets()
         {

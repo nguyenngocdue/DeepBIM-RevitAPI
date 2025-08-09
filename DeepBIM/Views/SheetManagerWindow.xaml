@@ -194,10 +194,47 @@
                     Content="&#xE8C8;"
                     ToolTip="Sao chép giá trị hiện tại sang cột mới"
                     Command="{Binding DuplicateCommand}" />
+            <!-- MoveToRightCommand -->
+            <Button 
+                ToolTip="Di chuyển sang danh sách xử lý"
+                Command="{Binding MoveToRightCommand}"
+                Style="{StaticResource IconButton}" Content="&#xE110;" RenderTransformOrigin="0.5,0.5">
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="90"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+            </Button>
+
+            <!-- MoveToLeftCommand -->
+            <Button
+                 Click="MoveToLeft_Click"
+                Style="{StaticResource IconButton}" Content="&#xE110;" ToolTip="Di chuyển trái" RenderTransformOrigin="0.5,0.5">
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="-90"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+            </Button>
             
-            <Button Style="{StaticResource IconButton}" Content="&#xE768;" ToolTip="Áp dụng thay đổi (preview)"/>
+            
             <Button Style="{StaticResource IconButton}" Content="&#xE110;" ToolTip="Di chuyển lên"/>
-            <Button Style="{StaticResource IconButton}" Content="&#xE111;" ToolTip="Di chuyển xuống"/>
+            <Button Style="{StaticResource IconButton}" Content="&#xE111;" ToolTip="Di chuyển xuống" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5">
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="90"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+            </Button>
             <Button Style="{StaticResource IconButton}" Content="&#xE72C;" ToolTip="Làm mới danh sách"/>
 
             <Button Style="{StaticResource IconButton}"
@@ -230,9 +267,11 @@
                     </Grid>
                 </Border>
 
-                <DataGrid Grid.Row="1"
+                <DataGrid 
+                    x:Name="DataGridRows"      
+                    Grid.Row="1"
                           ItemsSource="{Binding Rows}"
-                          IsReadOnly="True"
+                          SelectionMode="Extended"
                           >
                     <DataGrid.Columns>
                         <DataGridTextColumn  Binding="{Binding CurrentNumber}" Width="2*"/>
@@ -322,9 +361,9 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Thêm tiền tố:" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="2" Height="30"/>
+                            <TextBox Grid.Column="2" Height="30" Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Grid.Column="4" Text="Thêm Hậu Tố:" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="6" Height="30"/>
+                            <TextBox Grid.Column="6" Height="30" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}"/>
                         </Grid>
 
                         <Grid>
@@ -338,26 +377,27 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Tìm giá trị:" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="2" Height="30"/>
+                            <TextBox Grid.Column="2" Height="30" Text="{Binding Find, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Grid.Column="4" Text="Thay thế giá trị đã tìm" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="6" Height="30"/>
+                            <TextBox Grid.Column="6" Height="30" Text="{Binding Replace, UpdateSourceTrigger=PropertyChanged}"/>
                         </Grid>
 
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <RadioButton Content="Sheet Number" IsChecked="True"/>
-                            <RadioButton Content="Sheet Name" Margin="20,0,0,0"/>
+                            <RadioButton Content="Sheet Number" IsChecked="{Binding ApplyToNumber, Mode=TwoWay}"/>
+                            <RadioButton Content="Sheet Name" IsChecked="{Binding ApplyToName, Mode=TwoWay}" Margin="20,0,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
+
 
             <!-- Actions -->
             <StackPanel Grid.Column="3" Margin="0 10 0 0">
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="Phím chức năng" FontWeight="SemiBold" Margin="0 0 0 6"/>
-                        <Button Style="{StaticResource ActionButton}" Content="Áp Dụng Quy Tắc"/>
-                        <Button Style="{StaticResource ActionButton}" Content="Đổi Tên"/>
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding ApplyRulesCommand}" Content="Áp Dụng Quy Tắc"/>
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding RenameCommand}"  Content="Đổi Tên"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

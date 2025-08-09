@@ -41,5 +41,21 @@ namespace DeepBIM.Views
             //    vm.SearchCommand.Execute(null);
             //}
         }
+
+
+        private void MoveToLeft_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is SheetManagerViewModel vm && DataGridRows.SelectedItems.Count > 0)
+            {
+                var selected = new List<SheetRow>();
+                foreach (SheetRow item in DataGridRows.SelectedItems)
+                {
+                    selected.Add(item);
+                }
+
+                vm.ExecuteMoveToLeft(selected);
+            }
+        }
+       
     }
 }
