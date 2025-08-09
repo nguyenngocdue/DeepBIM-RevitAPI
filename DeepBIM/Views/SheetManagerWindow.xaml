@@ -315,6 +315,7 @@
             </Border>
 
             <!-- Sort order -->
+
             <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0 10 12 0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -327,13 +328,17 @@
                     <StackPanel Grid.Row="1" Margin="12" VerticalAlignment="Top">
                         <StackPanel Margin="0,0,0,8">
                             <TextBlock Text="Tiền tố" Foreground="#6E6A64" Margin="0,0,0,2"/>
-                            <TextBox Style="{StaticResource UnderlineTextBox}" Text="S"/>
+                            <TextBox Style="{StaticResource UnderlineTextBox}" 
+                         Text="{Binding PrefixNumber, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="Số bắt đầu" Foreground="#6E6A64" Margin="0,0,0,2"/>
-                            <TextBox Style="{StaticResource UnderlineTextBox}" Text="1"/>
+                            <TextBox Style="{StaticResource UnderlineTextBox}" 
+                         Text="{Binding StartNumber, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
-                        <Button Style="{StaticResource FullWidthAction}" Content="Sắp Xếp Thứ Tự"/>
+                        <Button Style="{StaticResource FullWidthAction}" 
+                    Content="Sắp Xếp Thứ Tự"
+                    Command="{Binding ArrangeSheetNumbersCommand}"/>
                     </StackPanel>
                 </Grid>
             </Border>

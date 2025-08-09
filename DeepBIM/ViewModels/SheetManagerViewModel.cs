@@ -16,9 +16,47 @@ namespace DeepBIM.ViewModels
 {
     public class SheetRow: INotifyPropertyChanged
     {
-        public string CurrentNumber { get; set; }
-        public string NewNumber { get; set; }
-        public string CurrentName { get; set; }
+        private string _currentNumber;
+        public string CurrentNumber
+        {
+            get => _currentNumber;
+            set
+            {
+                if (_currentNumber != value)
+                {
+                    _currentNumber = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentNumber)));
+                }
+            }
+        }
+
+        private string _newNumber;
+        public string NewNumber
+        {
+            get => _newNumber;
+            set
+            {
+                if (_newNumber != value)
+                {
+                    _newNumber = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewNumber)));
+                }
+            }
+        }
+
+        private string _currentName;
+        public string CurrentName
+        {
+            get => _currentName;
+            set
+            {
+                if (_currentName != value)
+                {
+                    _currentName = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentName)));
+                }
+            }
+        }
         private string _newName;
         public string NewName
         {
@@ -41,16 +79,66 @@ namespace DeepBIM.ViewModels
 
     public class SheetItem : INotifyPropertyChanged
     {
-        public ElementId Id { get; set; }
-        public string Number { get; set; }
-        public string Name { get; set; }
+        private ElementId _id;
+        private string _number;
+        private string _name;
+        private bool _isChecked;
+
+        public ElementId Id
+        {
+            get => _id;
+            set { _id = value; OnPropertyChanged(nameof(Id)); }
+        }
+
+        public string Number
+        {
+            get => _number;
+            set
+            {
+                if (_number != value)
+                {
+                    _number = value;
+                    OnPropertyChanged(nameof(Number));
+                    OnPropertyChanged(nameof(Display)); // ✅ Bắt buộc
+                }
+            }
+        }
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+                    OnPropertyChanged(nameof(Name));
+                    OnPropertyChanged(nameof(Display)); // ✅ Bắt buộc
+                }
+            }
+        }
+
         public string Display => $"{Number} - {Name}";
 
-        bool _isChecked;
-        public bool IsChecked { get => _isChecked; set { _isChecked = value; PropertyChanged?.Invoke(this, new(nameof(IsChecked))); } }
-
+        public bool IsChecked
+        {
+            get => _isChecked;
+            set
+            {
+                if (_isChecked != value)
+                {
+                    _isChecked = value;
+                    OnPropertyChanged(nameof(IsChecked));
+                }
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
     public class SheetManagerViewModel : INotifyPropertyChanged
@@ -113,6 +201,26 @@ namespace DeepBIM.ViewModels
         }
 
 
+
+        private string _prefixNumber = "";
+        private string _startNumber = "";
+
+        public string PrefixNumber
+        {
+            get => _prefixNumber;
+            set { _prefixNumber = value; OnChanged(nameof(PrefixNumber)); }
+        }
+
+        public string StartNumber
+        {
+            get => _startNumber;
+            set { _startNumber = value; OnChanged(nameof(StartNumber)); }
+        }
+
+        public ICommand ArrangeSheetNumbersCommand { get; }
+
+
+
         public ICommand ApplyRulesCommand { get; }
         public ICommand RenameCommand { get; }
 
@@ -151,9 +259,65 @@ namespace DeepBIM.ViewModels
 
             ApplyRulesCommand = new RelayCommand(ApplyRules);
             RenameCommand = new RelayCommand(RenameSheets, () => Rows.Any(r => r.NewSheetId != null));
+
+            ArrangeSheetNumbersCommand = new RelayCommand(ArrangeSheetNumbers);
         }
 
 
+        private void ArrangeSheetNumbers()
+        {
+            if (Rows.Count == 0)
+            {
+                TaskDialog.Show("Thông báo", "Không có bản vẽ nào để sắp xếp.");
+                return;
+            }
+
+            string startStr = _startNumber?.Trim() ?? "1";
+            if (string.IsNullOrEmpty(startStr))
+            {
+                TaskDialog.Show("Lỗi", "Số bắt đầu không được để trống.");
+                return;
+            }
+
+            // Lấy phần số từ chuỗi (ví dụ: "001" → 1, "00" → 0)
+            if (!int.TryParse(startStr, out int start))
+            {
+                TaskDialog.Show("Lỗi", "Số bắt đầu phải là số.");
+                return;
+            }
+
+            string prefix = _prefixNumber ?? "";
+
+            // Xác định độ dài padding từ _startNumber (ví dụ: "001" → 3, "00" → 2)
+            int padding = startStr.Length; // ← Mấu chốt: dùng độ dài chuỗi
+
+            // Lấy tất cả số hiện tại trong dự án để tránh trùng
+            var existingNumbers = new HashSet<string>(
+                new FilteredElementCollector(_doc)
+                    .OfClass(typeof(ViewSheet))
+                    .Cast<ViewSheet>()
+                    .Select(v => v.SheetNumber)
+            );
+
+            int current = start;
+
+            foreach (var row in Rows)
+            {
+                string newNumber;
+                do
+                {
+                    // Định dạng số với padding (ví dụ: 1 → "001" nếu padding = 3)
+                    string numberPart = current.ToString().PadLeft(padding, '0');
+                    newNumber = prefix + numberPart;
+                    current++;
+                } while (existingNumbers.Contains(newNumber));
+
+                row.NewNumber = newNumber;
+            }
+
+            // ✅ Cập nhật UI
+            TaskDialog.Show("Hoàn tất", $"Đã sắp xếp {Rows.Count} bản vẽ theo thứ tự.");
+        }
         private void RenameSheets()
         {
             var sheetsToRename = Rows.Where(r => r.NewSheetId != null).ToList();
@@ -178,8 +342,23 @@ namespace DeepBIM.ViewModels
                         {
                             t.Start();
                             sheet.Name = row.NewName;
+                            sheet.SheetNumber = row.NewNumber;
                             t.Commit();
                         }
+
+                        // ✅ CẬP NHẬT DỮ LIỆU TRONG VIEWMODEL
+                        var sheetItem = Sheets.FirstOrDefault(s => s.Id == row.NewSheetId);
+                        if (sheetItem != null)
+                        {
+                            sheetItem.Number = row.NewNumber; // ← Cập nhật số
+                            sheetItem.Name = row.NewName;     // ← Cập nhật tên
+                                                              // Display sẽ tự động cập nhật nếu có INotifyPropertyChanged
+                        }
+
+                        // ✅ CẬP NHẬT LẠI CurrentNumber và CurrentName trong Rows
+                        row.CurrentNumber = row.NewNumber;
+                        row.CurrentName = row.NewName;
+
                     }
                     catch (Exception ex)
                     {
@@ -189,6 +368,9 @@ namespace DeepBIM.ViewModels
 
                 tg.Assimilate();
             }
+            // ✅ Buộc UI cập nhật
+            SheetsView.Refresh();
+
         }
 
 
@@ -269,7 +451,7 @@ namespace DeepBIM.ViewModels
                 {
                     CurrentNumber = sheet.Number,
                     CurrentName = sheet.Name,
-                    NewNumber = GetUniqueSheetNumber(_doc, sheet.Number),
+                    NewNumber =sheet.Number,
                     NewName = sheet.Name,
                     NewSheetId = sheet.Id,
                 });
