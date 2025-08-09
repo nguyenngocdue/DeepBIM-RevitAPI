@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="GDTool - Change Sheet Name / Sheet Number"
+        Title="DeepBIM - Change Sheet Name / Sheet Number"
         Width="1600" Height="805" WindowStartupLocation="CenterOwner"
         Background="#FFF7F5F2" FontFamily="Segoe UI">
 
@@ -190,11 +190,21 @@
 
         <!-- MIDDLE: round buttons -->
         <StackPanel Grid.Column="1" Grid.Row="0" VerticalAlignment="Center">
-            <Button Style="{StaticResource IconButton}" Content="&#xE8C8;" ToolTip="Sao chép giá trị hiện tại sang cột mới"/>
+            <Button Style="{StaticResource IconButton}"
+                    Content="&#xE8C8;"
+                    ToolTip="Sao chép giá trị hiện tại sang cột mới"
+                    Command="{Binding DuplicateCommand}" />
+            
             <Button Style="{StaticResource IconButton}" Content="&#xE768;" ToolTip="Áp dụng thay đổi (preview)"/>
             <Button Style="{StaticResource IconButton}" Content="&#xE110;" ToolTip="Di chuyển lên"/>
             <Button Style="{StaticResource IconButton}" Content="&#xE111;" ToolTip="Di chuyển xuống"/>
             <Button Style="{StaticResource IconButton}" Content="&#xE72C;" ToolTip="Làm mới danh sách"/>
+
+            <Button Style="{StaticResource IconButton}"
+            Content="&#xE74D;"
+            ToolTip="Xóa các dòng đã chọn"
+            Command="{Binding DeleteSelectedSheetsCommand}" />
+
         </StackPanel>
 
         <!-- RIGHT/TOP: grid -->
@@ -213,26 +223,23 @@
                             <ColumnDefinition Width="3*"/>
                             <ColumnDefinition Width="3*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Sheet Number hiện tại" Foreground="White" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="0" Text="Sheet Number hiện tại"  Foreground="White" FontWeight="SemiBold"/>
                         <TextBlock Grid.Column="1" Text="Sheet Number mới" Foreground="White" FontWeight="SemiBold"/>
                         <TextBlock Grid.Column="2" Text="Sheet Name hiện tại" Foreground="White" FontWeight="SemiBold"/>
                         <TextBlock Grid.Column="3" Text="Sheet Name mới" Foreground="White" FontWeight="SemiBold"/>
                     </Grid>
                 </Border>
 
-                <DataGrid Grid.Row="1">
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding Rows}"
+                          IsReadOnly="True"
+                          >
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="" Width="2*" Binding="{Binding}"/>
-                        <DataGridTextColumn Header="" Width="2*" Binding="{Binding}"/>
-                        <DataGridTextColumn Header="" Width="3*" Binding="{Binding}"/>
-                        <DataGridTextColumn Header="" Width="3*" Binding="{Binding}"/>
+                        <DataGridTextColumn  Binding="{Binding CurrentNumber}" Width="2*"/>
+                        <DataGridTextColumn  Binding="{Binding NewNumber}"     Width="2*"/>
+                        <DataGridTextColumn  Binding="{Binding CurrentName}"   Width="3*"/>
+                        <DataGridTextColumn  Binding="{Binding NewName}"       Width="3*"/>
                     </DataGrid.Columns>
-                    <DataGrid.Items>
-                        <sys:String>M0010</sys:String>
-                        <sys:String>M0011</sys:String>
-                        <sys:String>S0001</sys:String>
-                        <sys:String>S0002</sys:String>
-                    </DataGrid.Items>
                 </DataGrid>
             </Grid>
         </Border>
