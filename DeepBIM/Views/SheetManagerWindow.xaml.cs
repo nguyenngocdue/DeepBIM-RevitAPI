@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Autodesk.Revit.UI;
+using DeepBIM.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,19 +21,25 @@ namespace DeepBIM.Views
     /// </summary>
     public partial class SheetManagerWindow : Window
     {
-        public SheetManagerWindow()
+        private readonly UIDocument _uiDoc;
+        private readonly SheetManagerViewModel _viewModel;
+        public SheetManagerWindow(UIApplication app)
         {
             InitializeComponent();
+            _uiDoc = app.ActiveUIDocument;
+            _viewModel = new SheetManagerViewModel(_uiDoc.Document);
+            DataContext = _viewModel;
         }
+   
 
         private void SearchBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter &&
-                DataContext is DeepBIM.ViewModels.SheetManagerViewModel vm &&
-                vm.SearchCommand.CanExecute(null))
-            {
-                vm.SearchCommand.Execute(null);
-            }
+            //if (e.Key == Key.Enter &&
+            //    DataContext is DeepBIM.ViewModels.SheetManagerViewModel vm &&
+            //    vm.SearchCommand.CanExecute(null))
+            //{
+            //    vm.SearchCommand.Execute(null);
+            //}
         }
     }
 }

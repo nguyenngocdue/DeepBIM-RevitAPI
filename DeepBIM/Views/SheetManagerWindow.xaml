@@ -3,142 +3,201 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="DBTool - Change Sheet Name / Sheet Number"
-        Height="720" Width="1120"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="Segoe UI" Background="#FFF7F5F2">
+        Title="GDTool - Change Sheet Name / Sheet Number"
+        Width="1600" Height="805" WindowStartupLocation="CenterOwner"
+        Background="#FFF7F5F2" FontFamily="Segoe UI">
 
-    <!-- Theme resources -->
+    <!-- ================= THEME / STYLES ================= -->
     <Window.Resources>
         <SolidColorBrush x:Key="Accent" Color="#D9A441"/>
         <SolidColorBrush x:Key="AccentDark" Color="#B07F21"/>
-        <Style x:Key="PanelHeader" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource Accent}"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="CornerRadius" Value="6,6,0,0"/>
-        </Style>
+        <SolidColorBrush x:Key="CardBorder" Color="#E9E6E2"/>
+
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Background" Value="White"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="BorderBrush" Value="#FFE9E6E2"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>
-        <!-- Icon button using Segoe MDL2 Assets -->
+        <Style x:Key="HeaderBar" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Accent}"/>
+            <Setter Property="CornerRadius" Value="6,6,0,0"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+
+        <Style x:Key="WatermarkTextBox" TargetType="TextBox">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                            <TextBlock Margin="12,0,0,0" Foreground="#9A9A9A"
+                                       VerticalAlignment="Center" IsHitTestVisible="False"
+                                       Text="{TemplateBinding Tag}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value=""/>
+                                                    <Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource TemplatedParent}}" Value="False"/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="UnderlineTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#C8C2B8"/>
+            <Setter Property="Padding" Value="0,2,0,6"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="Margin" Value="0 6"/>
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="18"/>
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentDark}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border CornerRadius="20" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <Border CornerRadius="20"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Foreground" Value="{StaticResource AccentDark}"/>
         </Style>
 
-        <!-- DataGrid style -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Margin" Value="0,6,0,0"/>
+            <Setter Property="Background" Value="{StaticResource Accent}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDark}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="FullWidthAction" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+
         <Style TargetType="DataGrid">
             <Setter Property="AutoGenerateColumns" Value="False"/>
             <Setter Property="CanUserAddRows" Value="False"/>
             <Setter Property="HeadersVisibility" Value="Column"/>
             <Setter Property="GridLinesVisibility" Value="None"/>
             <Setter Property="RowHeaderWidth" Value="0"/>
-            <Setter Property="BorderBrush" Value="#FFE9E6E2"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="SelectionMode" Value="Extended"/>
         </Style>
     </Window.Resources>
 
+    <!-- ================= LAYOUT ================= -->
     <Grid Margin="10">
+        <!-- Tăng nhẹ cột trái, giãn cột nút tròn để cân mắt -->
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320"/>
-            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="340"/>
+            <!-- trái -->
+            <ColumnDefinition Width="64"/>
+            <!-- dải nút tròn -->
             <ColumnDefinition Width="*"/>
+            <!-- vùng bảng & khu vực dưới -->
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="220"/>
+            <!-- vùng config dưới rộng hơn chút -->
         </Grid.RowDefinitions>
 
-        <!-- LEFT: Sheet list + search -->
-        <Border Grid.RowSpan="2" Style="{StaticResource Card}" Margin="0 0 10 0">
+        <!-- LEFT: All sheets -->
+        <Border Grid.RowSpan="2" Style="{StaticResource Card}" Margin="0 0 12 0">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel>
-                    <Border Style="{StaticResource PanelHeader}">
-                        <TextBlock Text="Tất cả Sheets" FontWeight="SemiBold" Foreground="White"/>
-                    </Border>
+                <Border Style="{StaticResource HeaderBar}">
+                    <TextBlock Text="Tất cả Sheets" Foreground="White" FontWeight="SemiBold"/>
+                </Border>
 
-                    <DockPanel Margin="0 10 0 6">
-                        <TextBox x:Name="SearchBox" Height="32" VerticalAlignment="Center"
-                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Tìm kiếm Sheet. Nhấn Enter để áp dụng tìm kiếm."
-                                 KeyDown="SearchBox_KeyDown"
-                                 Padding="10" />
-                    </DockPanel>
+                <TextBox Grid.Row="1" Style="{StaticResource WatermarkTextBox}"
+                         Tag="🔎  Tìm kiếm Sheet. Nhấn Enter để áp dụng tìm kiếm."
+                         Margin="0,10,0,8"/>
 
-                    <CheckBox Content=" - Chọn tất cả Sheets - "
-                              IsChecked="{Binding SelectAll, Mode=TwoWay}"
-                              Margin="4 0 0 8" />
-                </StackPanel>
+                <Border Grid.Row="2" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Padding="6">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                <ListBox Grid.Row="1" ItemsSource="{Binding SheetsView}"
-                         SelectionMode="Extended"
-                         SelectedItems="{Binding SelectedSheets, Mode=TwoWay}"
-                         BorderThickness="0" Margin="0 4 0 0">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <DockPanel>
-                                <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="6 0"/>
-                                <TextBlock Text="{Binding Display}" VerticalAlignment="Center" Margin="6 0"/>
-                            </DockPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                        <!-- Chọn tất cả -->
+                        <CheckBox Content=" - Chọn tất cả Sheets - "
+                  IsChecked="{Binding SelectAll, Mode=TwoWay}"
+                  Margin="6 0 0 8"/>
+
+                        <!-- Danh sách đổ từ ViewModel -->
+                        <ListBox Grid.Row="1"
+                 ItemsSource="{Binding SheetsView}"
+                 BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="6 0"/>
+                                        <TextBlock Text="{Binding Display}" VerticalAlignment="Center" Margin="6 0"/>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+
             </Grid>
         </Border>
 
-        <!-- MIDDLE: vertical icon buttons -->
+        <!-- MIDDLE: round buttons -->
         <StackPanel Grid.Column="1" Grid.Row="0" VerticalAlignment="Center">
-            <!-- Copy current -> new -->
-            <Button Style="{StaticResource IconButton}" Content="&#xE8C8;"
-                    ToolTip="Sao chép Sheet Number/Name hiện tại sang cột mới"
-                    Command="{Binding CopyCurrentToNewCommand}"/>
-            <!-- Move up -->
-            <Button Style="{StaticResource IconButton}" Content="&#xE110;"
-                    ToolTip="Di chuyển lên"
-                    Command="{Binding MoveUpCommand}"/>
-            <!-- Move down -->
-            <Button Style="{StaticResource IconButton}" Content="&#xE111;"
-                    ToolTip="Di chuyển xuống"
-                    Command="{Binding MoveDownCommand}"/>
-            <!-- Clear new values -->
-            <Button Style="{StaticResource IconButton}" Content="&#xE107;"
-                    ToolTip="Xóa cột mới"
-                    Command="{Binding ClearNewValuesCommand}"/>
-            <!-- Refresh -->
-            <Button Style="{StaticResource IconButton}" Content="&#xE72C;"
-                    ToolTip="Làm mới danh sách"
-                    Command="{Binding RefreshCommand}"/>
+            <Button Style="{StaticResource IconButton}" Content="&#xE8C8;" ToolTip="Sao chép giá trị hiện tại sang cột mới"/>
+            <Button Style="{StaticResource IconButton}" Content="&#xE768;" ToolTip="Áp dụng thay đổi (preview)"/>
+            <Button Style="{StaticResource IconButton}" Content="&#xE110;" ToolTip="Di chuyển lên"/>
+            <Button Style="{StaticResource IconButton}" Content="&#xE111;" ToolTip="Di chuyển xuống"/>
+            <Button Style="{StaticResource IconButton}" Content="&#xE72C;" ToolTip="Làm mới danh sách"/>
         </StackPanel>
 
-        <!-- RIGHT/TOP: Data grid -->
+        <!-- RIGHT/TOP: grid -->
         <Border Grid.Column="2" Grid.Row="0" Style="{StaticResource Card}">
             <Grid>
                 <Grid.RowDefinitions>
@@ -146,13 +205,13 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Border Style="{StaticResource PanelHeader}">
+                <Border Style="{StaticResource HeaderBar}">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="3*"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Sheet Number hiện tại" Foreground="White" FontWeight="SemiBold"/>
                         <TextBlock Grid.Column="1" Text="Sheet Number mới" Foreground="White" FontWeight="SemiBold"/>
@@ -161,111 +220,137 @@
                     </Grid>
                 </Border>
 
-                <DataGrid Grid.Row="1" ItemsSource="{Binding Rows}"
-                          IsReadOnly="False">
+                <DataGrid Grid.Row="1">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Binding="{Binding CurrentNumber}" Header=""/>
-                        <DataGridTextColumn Binding="{Binding NewNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Header=""/>
-                        <DataGridTextColumn Binding="{Binding CurrentName}" Header=""/>
-                        <DataGridTextColumn Binding="{Binding NewName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Header=""/>
+                        <DataGridTextColumn Header="" Width="2*" Binding="{Binding}"/>
+                        <DataGridTextColumn Header="" Width="2*" Binding="{Binding}"/>
+                        <DataGridTextColumn Header="" Width="3*" Binding="{Binding}"/>
+                        <DataGridTextColumn Header="" Width="3*" Binding="{Binding}"/>
                     </DataGrid.Columns>
+                    <DataGrid.Items>
+                        <sys:String>M0010</sys:String>
+                        <sys:String>M0011</sys:String>
+                        <sys:String>S0001</sys:String>
+                        <sys:String>S0002</sys:String>
+                    </DataGrid.Items>
                 </DataGrid>
             </Grid>
         </Border>
 
-        <!-- RIGHT/BOTTOM: config + action buttons -->
+        <!-- RIGHT/BOTTOM: config + actions -->
         <Grid Grid.Column="2" Grid.Row="1">
+            <!-- Tỉ lệ cân mắt: 1.15 : 1.35 : 2.5 + cột actions cố định 280px -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="260"/>
+                <ColumnDefinition Width="1.15*"/>
+                <!-- Scope -->
+                <ColumnDefinition Width="1.35*"/>
+                <!-- Sort -->
+                <ColumnDefinition Width="2.5*"/>
+                <!-- Rules -->
+                <ColumnDefinition Width="280"/>
+                <!-- Actions -->
             </Grid.ColumnDefinitions>
 
-            <!-- Phạm vi áp dụng -->
-            <Border Style="{StaticResource Card}" Margin="0 10 10 0">
+            <!-- Scope -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0 10 12 0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Border Style="{StaticResource PanelHeader}">
-                        <TextBlock Text="Phạm vi áp dụng" FontWeight="SemiBold" Foreground="White"/>
+                    <Border Style="{StaticResource HeaderBar}">
+                        <TextBlock Text="Phạm vi áp dụng" Foreground="White" FontWeight="SemiBold"/>
                     </Border>
-                    <StackPanel Grid.Row="1" Margin="6">
-                        <RadioButton Content="Toàn bộ dự án" IsChecked="{Binding ScopeAll, Mode=TwoWay}"/>
-                        <RadioButton Content="Lựa chọn hiện tại" IsChecked="{Binding ScopeSelection, Mode=TwoWay}"/>
+                    <StackPanel Grid.Row="1" Margin="10">
+                        <RadioButton Content="Toàn bộ dự án" IsChecked="True"/>
+                        <RadioButton Content="Lựa chọn hiện tại"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Sắp xếp thứ tự -->
-            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0 10 10 0">
+            <!-- Sort order -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0 10 12 0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Border Style="{StaticResource PanelHeader}">
-                        <TextBlock Text="Sắp xếp thứ tự bản vẽ" FontWeight="SemiBold" Foreground="White"/>
+                    <Border Style="{StaticResource HeaderBar}">
+                        <TextBlock Text="Sắp xếp thứ tự bản vẽ" Foreground="White" FontWeight="SemiBold"/>
                     </Border>
-                    <Grid Grid.Row="1" Margin="6" ColumnDefinitions="Auto,10,*,10,*,10,Auto">
-                        <TextBlock VerticalAlignment="Center" Text="Tiền tố:"/>
-                        <TextBox Grid.Column="2" Text="{Binding SortPrefix}" Height="28"/>
-                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="Số bắt đầu:"/>
-                        <TextBox Grid.Column="6" Text="{Binding SortStart}" Width="80" Height="28"/>
-                    </Grid>
-                    <Button Grid.Row="1" Content="Sắp Xếp Thứ Tự" HorizontalAlignment="Left" Margin="6,52,0,0" Width="150"
-                            Command="{Binding SortCommand}"/>
+                    <StackPanel Grid.Row="1" Margin="12" VerticalAlignment="Top">
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="Tiền tố" Foreground="#6E6A64" Margin="0,0,0,2"/>
+                            <TextBox Style="{StaticResource UnderlineTextBox}" Text="S"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Số bắt đầu" Foreground="#6E6A64" Margin="0,0,0,2"/>
+                            <TextBox Style="{StaticResource UnderlineTextBox}" Text="1"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource FullWidthAction}" Content="Sắp Xếp Thứ Tự"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Quy tắc đặt tên tự động -->
-            <Border Grid.Column="2" Style="{StaticResource Card}" Margin="0 10 10 0">
+            <!-- Rules -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Margin="0 10 12 0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Border Style="{StaticResource PanelHeader}">
-                        <TextBlock Text="Quy tắc đặt tên tự động" FontWeight="SemiBold" Foreground="White"/>
+                    <Border Style="{StaticResource HeaderBar}">
+                        <TextBlock Text="Quy tắc đặt tên tự động" Foreground="White" FontWeight="SemiBold"/>
                     </Border>
 
-                    <Grid Grid.Row="1" Margin="8" RowDefinitions="Auto,8,Auto,8,Auto">
-                        <!-- Prefix / Suffix -->
-                        <Grid ColumnDefinitions="Auto,8,*,16,Auto,8,*">
+                    <StackPanel Grid.Row="1" Margin="10" Orientation="Vertical">
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
                             <TextBlock Text="Thêm tiền tố:" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="2" Text="{Binding AddPrefix}" Height="28"/>
-                            <TextBlock Grid.Column="4" Text="Thêm hậu tố:" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="6" Text="{Binding AddSuffix}" Height="28"/>
+                            <TextBox Grid.Column="2" Height="30"/>
+                            <TextBlock Grid.Column="4" Text="Thêm Hậu Tố:" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="6" Height="30"/>
                         </Grid>
 
-                        <!-- Find / Replace -->
-                        <Grid Grid.Row="2" ColumnDefinitions="Auto,8,*,16,Auto,8,*">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
                             <TextBlock Text="Tìm giá trị:" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="2" Text="{Binding FindValue}" Height="28"/>
-                            <TextBlock Grid.Column="4" Text="Thay thế bằng:" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="6" Text="{Binding ReplaceValue}" Height="28"/>
+                            <TextBox Grid.Column="2" Height="30"/>
+                            <TextBlock Grid.Column="4" Text="Thay thế giá trị đã tìm" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="6" Height="30"/>
                         </Grid>
 
-                        <!-- Target -->
-                        <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto,*" Margin="0,6,0,0">
-                            <RadioButton Content="Sheet Number" IsChecked="{Binding RuleTargetIsNumber}" />
-                            <RadioButton Grid.Column="2" Content="Sheet Name" IsChecked="{Binding RuleTargetIsName}" />
-                        </Grid>
-                    </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <RadioButton Content="Sheet Number" IsChecked="True"/>
+                            <RadioButton Content="Sheet Name" Margin="20,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Action buttons -->
-            <StackPanel Grid.Column="3" Orientation="Vertical" Margin="0 10 0 0">
+            <!-- Actions -->
+            <StackPanel Grid.Column="3" Margin="0 10 0 0">
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Text="Phím chức năng" FontWeight="SemiBold" Margin="0 0 0 8"/>
-                        <Button Content="Áp Dụng Quy Tắc" Height="40" Margin="0 0 0 8"
-                                Command="{Binding ApplyRulesCommand}"/>
-                        <Button Content="Đổi Tên" Height="40"
-                                Command="{Binding RenameSheetsCommand}"/>
+                        <TextBlock Text="Phím chức năng" FontWeight="SemiBold" Margin="0 0 0 6"/>
+                        <Button Style="{StaticResource ActionButton}" Content="Áp Dụng Quy Tắc"/>
+                        <Button Style="{StaticResource ActionButton}" Content="Đổi Tên"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

@@ -10,13 +10,12 @@ namespace DeepBIM.Commands
     /// </summary>
     [UsedImplicitly]
     [Transaction(TransactionMode.Manual)]
-    public class StartupCommand : ExternalCommand
+    public class StartupCommand : IExternalCommand
     {
-        public override void Execute(ExternalCommandData data, ref string message, ElementSet elements)
+        public Result Execute(ExternalCommandData data, ref string message, ElementSet elements)
         {
-
-
-
+            // Implementation of the command logic goes here.
+            return Result.Succeeded;
         }
     }
 }

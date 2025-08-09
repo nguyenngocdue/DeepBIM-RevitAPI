@@ -22,6 +22,10 @@ namespace DeepBIM
             panel.AddPushButton<StartupCommand>("Execute")
                 .SetImage("/DeepBIM;component/Resources/Icons/RibbonIcon16.png")
                 .SetLargeImage("/DeepBIM;component/Resources/Icons/RibbonIcon32.png");
+
+            panel.AddPushButton<SheetManagerCommand>("Execute")
+              .SetImage("/DeepBIM;component/Resources/Icons/RibbonIcon16.png")
+              .SetLargeImage("/DeepBIM;component/Resources/Icons/RibbonIcon32.png");
         }
     }
 }
