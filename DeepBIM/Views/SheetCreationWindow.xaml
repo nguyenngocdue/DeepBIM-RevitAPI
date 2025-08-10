@@ -6,6 +6,11 @@
         xmlns:local="clr-namespace:DeepBIM.Views"
         mc:Ignorable="d"
         Title="Create Sheets From Excel" Height="450" Width="800">
+    
+   
+
+
+
     <Grid Margin="10">
         <!-- Header -->
         <Grid.RowDefinitions>
@@ -37,7 +42,7 @@
                         Content="Browse..." Padding="5" 
                         Background="#FF99CC00" 
                         Foreground="White" 
-                        Click="BrowseButton_Click"/>
+                        Click="BrowseExcelButton_Click"/>
                 </StackPanel>
 
                 <!-- Family -->
@@ -64,16 +69,23 @@
 
         <!-- Excel Data Table -->
         <GroupBox Header="Excel data table" Grid.Row="1" Margin="0,0,0,10" Padding="10">
-            <DataGrid x:Name="excelDataTable" AutoGenerateColumns="True" IsReadOnly="True"
-                      CanUserAddRows="False" CanUserDeleteRows="False"
-                      HeadersVisibility="All" Margin="5" AlternatingRowBackground="#F0F0F0"
-                      MaxHeight="200" />
+            <DataGrid 
+                    x:Name="excelDataTable" 
+                    AutoGenerateColumns="True" 
+                    IsReadOnly="True"
+                    CanUserAddRows="False" 
+                    CanUserDeleteRows="False"
+                    HeadersVisibility="All" 
+                    Margin="5" 
+                    AlternatingRowBackground="#F0F0F0"
+                    MaxHeight="200" 
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Auto"/>
         </GroupBox>
 
         <!-- Buttons -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2" Margin="0,10,0,0">
-            <Button Content="Browse..." Padding="10" Background="#FF99CC00" Foreground="White" Click="BrowseButton_Click"/>
-            <Button Content="Create" Padding="10" Background="#FF99CC00" Foreground="White" Click="CreateButton_Click"/>
+            <Button Content="Create"  Click="CreateButton_Click"/>
             <Button Content="Update" Padding="10" Background="#FF99CC00" Foreground="White" Click="UpdateButton_Click"/>
             <Button Content="Cancel" Padding="10" Background="#FF99CC00" Foreground="White" Click="CancelButton_Click"/>
         </StackPanel>

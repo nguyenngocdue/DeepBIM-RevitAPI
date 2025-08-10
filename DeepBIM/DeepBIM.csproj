@@ -57,6 +57,7 @@
 
     <ItemGroup>
         <!-- Revit References -->
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
         <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" />
         <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*" />
         <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
@@ -71,10 +72,6 @@
     <ItemGroup>
         <Resource Include="Resources\Icons\RibbonIcon16.png" />
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Styles\" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
