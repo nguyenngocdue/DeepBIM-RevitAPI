@@ -73,6 +73,10 @@
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Styles\" />
+    </ItemGroup>
+
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
       <Exec Command="xcopy /Y /F &quot;$(TargetDir)DeepBIM.dll&quot; &quot;%25AppData%25\Autodesk\Revit\Addins\2025\&quot;" />
     </Target>

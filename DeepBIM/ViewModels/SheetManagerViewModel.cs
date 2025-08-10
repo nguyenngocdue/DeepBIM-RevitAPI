@@ -1,20 +1,12 @@
 ﻿using Autodesk.Revit.UI;
-using CommunityToolkit.Mvvm.Messaging;
-using DeepBIM.Views;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
 
 namespace DeepBIM.ViewModels
 {
-    public class SheetRow: INotifyPropertyChanged
+    public class SheetRow : INotifyPropertyChanged
     {
         private string _currentNumber;
         public string CurrentNumber
@@ -129,6 +121,7 @@ namespace DeepBIM.ViewModels
                 {
                     _isChecked = value;
                     OnPropertyChanged(nameof(IsChecked));
+                    CommandManager.InvalidateRequerySuggested(); // Cập nhật nút
                 }
             }
         }
@@ -217,31 +210,106 @@ namespace DeepBIM.ViewModels
             set { _startNumber = value; OnChanged(nameof(StartNumber)); }
         }
 
+        private string _scopeOption;
+        public string ScopeOption
+        {
+            get => _scopeOption;
+            set
+            {
+                if (_scopeOption != value)
+                {
+                    _scopeOption = value;
+                    OnChanged(nameof(ScopeOption));
+                    OnChanged(nameof(IsAllSelected));
+                    OnChanged(nameof(IsSelectedSelected));
+                }
+            }
+        }
+
+        public bool IsAllSelected
+        {
+            get => ScopeOption == "All";
+            set
+            {
+                if (value) ScopeOption = "All";
+            }
+        }
+
+        public bool IsSelectedSelected
+        {
+            get => ScopeOption == "Selected";
+            set
+            {
+                if (value) ScopeOption = "Selected";
+            }
+        }
+
+        // Search
+        private string _searchText;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnChanged(nameof(SearchText));
+                ApplyFilter();
+            }
+        }
+
+        public ICommand SearchCommand { get; }
+
         public ICommand ArrangeSheetNumbersCommand { get; }
-
-
-
         public ICommand ApplyRulesCommand { get; }
         public ICommand RenameCommand { get; }
 
-
         private readonly Document _doc;
+        private readonly UIDocument _uidoc;
         public ICommand DuplicateCommand { get; }
         public ICommand DeleteSelectedSheetsCommand { get; }
         public ICommand MoveToRightCommand { get; }
 
-        public SheetManagerViewModel(Document doc)
+        public ICommand ScopeChangedCommand { get; }
+        public ICommand RefreshCommand { get; }
+
+        public SheetManagerViewModel(Document doc, UIDocument uidoc, ICollection<ElementId> selectedIds = null)
         {
             _doc = doc;
-            var sheets = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet))
+            _uidoc = uidoc;
+            var allSheets = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet))
                            .Cast<ViewSheet>()
                            .Where(v => !v.IsPlaceholder)
-                           .OrderBy(v => v.SheetNumber, StringComparer.OrdinalIgnoreCase);
+                           .OrderBy(v => v.SheetNumber, StringComparer.OrdinalIgnoreCase)
+                           .ToList();
 
-            foreach (var s in sheets)
-                Sheets.Add(new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name });
+            if (selectedIds != null && selectedIds.Any())
+            {
+                // ✅ Chỉ lấy các sheet đã được chọn trong Revit
+                var selectedSheetElements = allSheets
+                    .Where(s => selectedIds.Contains(s.Id))
+                    .ToList();
+
+                foreach (var s in selectedSheetElements)
+                {
+                    Sheets.Add(new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name });
+                }
+
+                // ✅ Bật "Lựa chọn hiện tại"
+                ScopeOption = "Selected";
+            }
+            else
+            {
+                // ✅ Tải toàn bộ
+                foreach (var s in allSheets)
+                {
+                    Sheets.Add(new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name });
+                }
+
+                ScopeOption = "All";
+            }
 
             SheetsView = CollectionViewSource.GetDefaultView(Sheets);
+
 
             // ✅ Khởi tạo các lệnh
             DuplicateCommand = new RelayCommand(DuplicateSelected, () => Sheets.Any(s => s.IsChecked));
@@ -261,37 +329,179 @@ namespace DeepBIM.ViewModels
             RenameCommand = new RelayCommand(RenameSheets, () => Rows.Any(r => r.NewSheetId != null));
 
             ArrangeSheetNumbersCommand = new RelayCommand(ArrangeSheetNumbers);
+
+            ScopeChangedCommand = new RelayCommand<string>(param =>
+            {
+                ScopeOption = param; // "All" hoặc "Selected"
+                OnScopeChanged();    // Tải lại danh sách
+            });
+
+            SearchCommand = new RelayCommand(SearchSheets);
+
+            RefreshCommand = new RelayCommand(
+                execute: RefreshRows,
+                canExecute: () => Sheets.Any(s => s.IsChecked)
+            );
         }
 
+        private void RefreshRows()
+        {
+            // Xác nhận (tùy chọn)
+            var result = TaskDialog.Show("Làm mới danh sách",
+                "Bạn có chắc muốn làm mới danh sách?\n" +
+                "Tất cả thay đổi trong bảng sẽ bị mất.",
+                TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No);
+
+            if (result != TaskDialogResult.Yes)
+                return;
+
+            // Xóa hết dòng cũ
+            Rows.Clear();
+
+            // Lấy các sheet đang được tích
+            var checkedSheets = Sheets.Where(s => s.IsChecked).ToList();
+
+            if (!checkedSheets.Any())
+            {
+                TaskDialog.Show("Thông báo", "Không có sheet nào được chọn để làm mới.");
+                return;
+            }
+
+            // Thêm lại vào Rows với giá trị gốc
+            foreach (var sheet in checkedSheets)
+            {
+                Rows.Add(new SheetRow
+                {
+                    CurrentNumber = sheet.Number,
+                    CurrentName = sheet.Name,
+                    NewNumber = sheet.Number,   // Reset về số gốc
+                    NewName = sheet.Name        // Reset về tên gốc
+                });
+            }
+
+            // (Tùy chọn) Cuộn xuống cuối
+            // Nếu có DataGrid, có thể scroll: DataGridRows.ScrollIntoView(Rows.Last());
+        }
+
+        private void ApplyFilter()
+        {
+            if (SheetsView == null) return;
+
+            if (string.IsNullOrWhiteSpace(_searchText))
+            {
+                SheetsView.Filter = null;
+            }
+            else
+            {
+                string keyword = _searchText.Trim().ToLower();
+
+                SheetsView.Filter = item =>
+                {
+                    if (item is SheetItem sheet)
+                    {
+                        return sheet.Number.ToLower().Contains(keyword) ||
+                               sheet.Name.ToLower().Contains(keyword);
+                    }
+                    return false;
+                };
+            }
+
+            SheetsView.Refresh();
+        }
+
+        private void SearchSheets()
+        {
+            if (SheetsView == null) return;
+
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                // Nếu trống → hiển thị tất cả
+                SheetsView.Filter = null;
+            }
+            else
+            {
+                string keyword = SearchText.Trim().ToLower();
+
+                SheetsView.Filter = item =>
+                {
+                    if (item is SheetItem sheet)
+                    {
+                        return sheet.Number.ToLower().Contains(keyword) ||
+                               sheet.Name.ToLower().Contains(keyword);
+                    }
+                    return false;
+                };
+            }
+
+            // Cập nhật UI
+            SheetsView.Refresh();
+        }
+
+        private void OnScopeChanged()
+        {
+            // Xóa dữ liệu cũ
+            Sheets.Clear();
+
+            var allSheets = new FilteredElementCollector(_doc)
+                .OfClass(typeof(ViewSheet))
+                .Cast<ViewSheet>()
+                .Where(v => !v.IsPlaceholder)
+                .OrderBy(v => v.SheetNumber, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (IsSelectedSelected)
+            {
+                // Lấy danh sách sheet đang được chọn trong Revit
+                var selectedIds = _uidoc.Selection.GetElementIds();
+                var selectedSheetElements = allSheets
+                    .Where(s => selectedIds.Contains(s.Id))
+                    .ToList();
+
+                foreach (var s in selectedSheetElements)
+                {
+                    Sheets.Add(new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name });
+                }
+            }
+            else // IsAllSelected
+            {
+                foreach (var s in allSheets)
+                {
+                    Sheets.Add(new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name });
+                }
+            }
+
+            // Cập nhật UI
+            SheetsView.Refresh();
+        }
 
         private void ArrangeSheetNumbers()
         {
             if (Rows.Count == 0)
             {
-                TaskDialog.Show("Thông báo", "Không có bản vẽ nào để sắp xếp.");
+                TaskDialog.Show("Notification", "There are no sheets to arrange.");
                 return;
             }
 
             string startStr = _startNumber?.Trim() ?? "1";
             if (string.IsNullOrEmpty(startStr))
             {
-                TaskDialog.Show("Lỗi", "Số bắt đầu không được để trống.");
+                TaskDialog.Show("Error", "Starting number cannot be empty.");
                 return;
             }
 
-            // Lấy phần số từ chuỗi (ví dụ: "001" → 1, "00" → 0)
+            // Extract the numeric part from the string (e.g., "001" → 1, "00" → 0)
             if (!int.TryParse(startStr, out int start))
             {
-                TaskDialog.Show("Lỗi", "Số bắt đầu phải là số.");
+                TaskDialog.Show("Error", "Starting number must be numeric.");
                 return;
             }
 
             string prefix = _prefixNumber ?? "";
 
-            // Xác định độ dài padding từ _startNumber (ví dụ: "001" → 3, "00" → 2)
-            int padding = startStr.Length; // ← Mấu chốt: dùng độ dài chuỗi
+            // Determine the padding length from _startNumber (e.g., "001" → 3, "00" → 2)
+            int padding = startStr.Length; // ← Key: use the original string length
 
-            // Lấy tất cả số hiện tại trong dự án để tránh trùng
+            // Get all existing sheet numbers in the project to avoid duplicates
             var existingNumbers = new HashSet<string>(
                 new FilteredElementCollector(_doc)
                     .OfClass(typeof(ViewSheet))
@@ -306,18 +516,20 @@ namespace DeepBIM.ViewModels
                 string newNumber;
                 do
                 {
-                    // Định dạng số với padding (ví dụ: 1 → "001" nếu padding = 3)
                     string numberPart = current.ToString().PadLeft(padding, '0');
                     newNumber = prefix + numberPart;
                     current++;
-                } while (existingNumbers.Contains(newNumber));
+                }
+                while (existingNumbers.Contains(newNumber));
 
                 row.NewNumber = newNumber;
             }
 
-            // ✅ Cập nhật UI
-            TaskDialog.Show("Hoàn tất", $"Đã sắp xếp {Rows.Count} bản vẽ theo thứ tự.");
+            // ✅ Update UI
+            TaskDialog.Show("Completed", $"Arranged {Rows.Count} sheets in order.\n\nPlease review the new sheet numbers carefully before clicking Apply.");
+
         }
+
         private void RenameSheets()
         {
             var sheetsToRename = Rows.Where(r => r.NewSheetId != null).ToList();
@@ -451,7 +663,7 @@ namespace DeepBIM.ViewModels
                 {
                     CurrentNumber = sheet.Number,
                     CurrentName = sheet.Name,
-                    NewNumber =sheet.Number,
+                    NewNumber = sheet.Number,
                     NewName = sheet.Name,
                     NewSheetId = sheet.Id,
                 });

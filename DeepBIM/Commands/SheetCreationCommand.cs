@@ -10,7 +10,7 @@ using System.Windows.Interop;
 namespace DeepBIM.Commands
 {
     [Transaction(TransactionMode.Manual)]
-    public class SheetManagerCommand : IExternalCommand
+    public class SheetCreationCommand : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -20,12 +20,10 @@ namespace DeepBIM.Commands
                 UIDocument uidoc = uiapp.ActiveUIDocument;
                 Document doc = uidoc.Document;
 
-                // ✅ Lấy danh sách đã chọn
-                var selectedIds = uidoc.Selection.GetElementIds();
 
                 // Khởi tạo Window + ViewModel
-                var win = new DeepBIM.Views.SheetManagerWindow(uiapp, doc); // Pass 'uiapp' as required by the constructor
-                win.DataContext = new DeepBIM.ViewModels.SheetManagerViewModel(doc, uidoc, selectedIds);
+                var win = new DeepBIM.Views.SheetCreatetionWindow(uidoc); // Pass 'uiapp' as required by the constructor
+                win.DataContext = new DeepBIM.ViewModels.SheetCreationViewModel();
 
                 // Đặt owner là Revit để form modal và luôn trên cùng
                 new WindowInteropHelper(win) { Owner = uiapp.MainWindowHandle };
