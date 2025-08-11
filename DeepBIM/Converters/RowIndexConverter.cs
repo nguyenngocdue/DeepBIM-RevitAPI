@@ -5,8 +5,20 @@ using System.Windows.Controls;
 
 namespace DeepBIM.Converters
 {
+    public class AddOneConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            => value is int i ? i + 1 : 0;
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => System.Windows.Data.Binding.DoNothing;
+    }
+
+
     public class RowIndexConverter : IValueConverter
     {
+       
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is DataGridRow row && row.DataContext != null)

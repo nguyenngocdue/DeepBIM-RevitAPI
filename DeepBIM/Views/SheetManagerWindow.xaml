@@ -24,7 +24,6 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Additional Styles -->
-            <converters:RowIndexConverter x:Key="RowIndexConverter"/>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -195,27 +194,11 @@
                           Grid.Row="1"
                           ItemsSource="{Binding Rows}"
                           AutoGenerateColumns="False"
-                          HeadersVisibility="None"
-                          SelectionMode="Extended"
-                          CanUserReorderColumns="False"
-                          CanUserResizeRows="True"
-                          EnableRowVirtualization="True">
+                          HeadersVisibility="Row"
+                          RowHeaderWidth="40"
+                          LoadingRow="DataGridRows_LoadingRow">
 
                     <DataGrid.Columns>
-                        <!-- Index -->
-                        <DataGridTextColumn Width="Auto" IsReadOnly="True">
-                            <DataGridTextColumn.Binding>
-                                <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=DataGridRow}"
-                                         Converter="{StaticResource RowIndexConverter}" />
-                            </DataGridTextColumn.Binding>
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="TextAlignment" Value="Center"/>
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Margin" Value="8,0,8,0"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
 
                         <!-- Current Sheet Number -->
                         <DataGridTextColumn Binding="{Binding CurrentNumber}" Width="2*" IsReadOnly="True">

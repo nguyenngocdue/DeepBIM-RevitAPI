@@ -52,7 +52,7 @@
     <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
     <PropertyGroup>
         <IsRepackable>false</IsRepackable>
-        <DeployRevitAddin>false</DeployRevitAddin>
+        <DeployRevitAddin>true</DeployRevitAddin>
     </PropertyGroup>
     <ItemGroup>
       <None Remove="Resources\Icons\logo-deepbim.png" />
@@ -96,5 +96,4 @@
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
       <Exec Command="xcopy /Y /F &quot;$(TargetDir)DeepBIM.dll&quot; &quot;%25AppData%25\Autodesk\Revit\Addins\2025\&quot;" />
     </Target>
-
 </Project>
