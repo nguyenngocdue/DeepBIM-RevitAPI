@@ -3,24 +3,38 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DeepBIM.Views"
         mc:Ignorable="d"
-        Title="Create Sheets From Excel" Height="450" Width="800">
-    
-   
+        Title="Create Sheets From Excel" 
+        Height="585" 
+        Width="935"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FA">
 
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/Styles/Styles.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/ComboboxStyle.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/TextBlockStyle.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/DataGridStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
+            <!-- Additional Styles -->
+        </ResourceDictionary>
+    </Window.Resources>
 
-    <Grid Margin="10">
-        <!-- Header -->
+    <Grid Margin="20,20,10,7">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="250"/>
+            <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
 
         <!-- Input Section -->
-        <GroupBox Header="Input" Grid.Row="0" Margin="0,0,0,10" Padding="10">
+        <GroupBox Header="Input Settings" 
+                 Grid.Row="0" 
+                 Style="{StaticResource ModernGroupBox}"
+                  >
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -28,66 +42,107 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120"/>
-                    <!-- Label column -->
+                    <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="*"/>
-                    <!-- Input column -->
                 </Grid.ColumnDefinitions>
 
                 <!-- Directory -->
-                <Label Content="Directory:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Margin="5,0,0,0">
-                    <TextBox x:Name="txtDirectory" Margin="0,0,5,0" MinWidth="300" Width="559"/>
-                    <Button 
-                        Content="Browse..." Padding="5" 
-                        Background="#FF99CC00" 
-                        Foreground="White" 
-                        Click="BrowseExcelButton_Click"/>
+                <Label Content="Excel Directory:" 
+                      Grid.Row="0" 
+                      Grid.Column="0" 
+                      VerticalAlignment="Center" 
+                      FontWeight="SemiBold"
+                      Foreground="#344054"/>
+                <StackPanel Orientation="Horizontal" 
+                          Grid.Row="0" 
+                          Grid.Column="1" 
+                          Margin="5,5,0,5">
+                    <TextBox x:Name="txtDirectory"
+                            Style="{StaticResource OutlinedTextBox}"
+                            Width="550"
+                            Height="32"
+                            VerticalContentAlignment="Center"
+                            Tag="Select Excel directory..."/>
+                    <Button Content="Browse"
+                           Style="{StaticResource TertiaryFilledButton}"
+                           Width="100"
+                           Height="32"
+                           Margin="10,0,0,0"
+                           Click="BrowseExcelButton_Click"/>
                 </StackPanel>
 
                 <!-- Family -->
-                <Label Content="Family:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                <ComboBox x:Name="cmbFamily" 
-                      Grid.Row="1" Grid.Column="1" 
-                      Margin="5,0,0,0" 
-                      HorizontalAlignment="Stretch" 
-                      MinWidth="300"
-                      DisplayMemberPath="Name" 
-                      SelectedIndex="0"
-                      SelectionChanged="cmbFamily_SelectionChanged"
-                 />
+                <Label Content="Sheet Family:" 
+                      Grid.Row="1" 
+                      Grid.Column="0" 
+                      VerticalAlignment="Center" 
+                      FontWeight="SemiBold"
+                      Foreground="#344054"/>
+                <ComboBox x:Name="cmbFamily"
+                         Grid.Row="1" 
+                         Grid.Column="1"
+                         Margin="4,5,24,5"
+                         Height="32"
+                         VerticalContentAlignment="Center"
+                         DisplayMemberPath="Name"
+                         SelectedIndex="0"
+                         SelectionChanged="cmbFamily_SelectionChanged"/>
 
                 <!-- Type Name -->
-                <Label Content="Type Name:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                <ComboBox x:Name="cmbTypeName" 
-                      Grid.Row="2" Grid.Column="1" 
-                      Margin="5,0,0,0" 
-                      HorizontalAlignment="Stretch" 
-                      MinWidth="300"/>
+                <Label Content="Type Name:" 
+                      Grid.Row="2" 
+                      Grid.Column="0" 
+                      VerticalAlignment="Center" 
+                      FontWeight="SemiBold"
+                      Foreground="#344054"/>
+                <ComboBox x:Name="cmbTypeName"
+                         Grid.Row="2" 
+                         Grid.Column="1"
+                         Margin="4,5,24,5"
+                         Height="32"
+                         VerticalContentAlignment="Center"/>
             </Grid>
         </GroupBox>
 
         <!-- Excel Data Table -->
-        <GroupBox Header="Excel data table" Grid.Row="1" Margin="0,0,0,10" Padding="10">
+        <GroupBox Header="Excel Data Preview" 
+                 Grid.Row="1" 
+                 Style="{StaticResource ModernGroupBox}"
+                 Margin="0 10 0 0"
+                  >
             <DataGrid 
-                    x:Name="excelDataTable" 
-                    AutoGenerateColumns="True" 
-                    IsReadOnly="True"
-                    CanUserAddRows="False" 
-                    CanUserDeleteRows="False"
-                    HeadersVisibility="All" 
-                    Margin="5" 
-                    AlternatingRowBackground="#F0F0F0"
-                    MaxHeight="200" 
-                    VerticalScrollBarVisibility="Auto"
-                    HorizontalScrollBarVisibility="Auto"/>
+                x:Name="excelDataTable"
+                AutoGenerateColumns="True"
+                 IsReadOnly="True"
+                 CanUserAddRows="False"
+                 CanUserDeleteRows="False"
+                 HeadersVisibility="All"
+                MaxHeight="150" Margin="0,0,0,-150"
+                />
         </GroupBox>
 
         <!-- Buttons -->
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2" Margin="0,10,0,0">
-            <Button Content="Create"  Click="CreateButton_Click"/>
-            <Button Content="Update" Padding="10" Background="#FF99CC00" Foreground="White" Click="UpdateButton_Click"/>
-            <Button Content="Cancel" Padding="10" Background="#FF99CC00" Foreground="White" Click="CancelButton_Click"/>
+        <StackPanel Orientation="Horizontal" 
+                   HorizontalAlignment="Right" 
+                   Grid.Row="2" 
+                   Margin="0,8,0,31">
+            <Button Content="Create"
+                   Style="{StaticResource CreateFilledButton}"
+                   Width="120"
+                   Height="36"
+                   Margin="0,0,10,0"
+                   Click="CreateButton_Click"/>
+            <Button Content="Update"
+                   Style="{StaticResource UpdateFilledButton}"
+                   Width="120"
+                   Height="36"
+                   Margin="0,0,10,0"
+                   Click="UpdateButton_Click"/>
+            <Button Content="Cancel"
+                   Style="{StaticResource CancelButton}"
+                   Width="120"
+                   Height="36"
+                   Click="CancelButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>
