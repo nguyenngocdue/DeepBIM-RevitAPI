@@ -54,6 +54,16 @@
         <IsRepackable>false</IsRepackable>
         <DeployRevitAddin>false</DeployRevitAddin>
     </PropertyGroup>
+    <ItemGroup>
+      <None Remove="Resources\Icons\logo-deepbim.png" />
+      <None Remove="Resources\Icons\logo.png" />
+      <None Remove="Resources\Icons\management16.png" />
+      <None Remove="Resources\Icons\management32.png" />
+      <None Remove="Resources\Icons\plus16.png" />
+      <None Remove="Resources\Icons\plus32.png" />
+      <None Remove="Resources\Icons\sheet-manage26.png" />
+      <None Remove="Resources\Icons\sheet-manage32.png" />
+    </ItemGroup>
 
     <ItemGroup>
         <!-- Revit References -->
@@ -72,8 +82,15 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Resource Include="Resources\Icons\logo.png" />
+        <Resource Include="Resources\Icons\management16.png" />
+        <Resource Include="Resources\Icons\management32.png" />
+        <Resource Include="Resources\Icons\plus16.png" />
+        <Resource Include="Resources\Icons\plus32.png" />
         <Resource Include="Resources\Icons\RibbonIcon16.png" />
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
+        <Resource Include="Resources\Icons\sheet-manage26.png" />
+        <Resource Include="Resources\Icons\sheet-manage32.png" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

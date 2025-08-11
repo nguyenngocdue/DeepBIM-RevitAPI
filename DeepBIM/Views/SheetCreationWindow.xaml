@@ -8,6 +8,7 @@
         Height="585" 
         Width="935"
         WindowStartupLocation="CenterScreen"
+        Icon="/DeepBIM;component/Resources/Icons/logo.png"
         Background="#F5F7FA">
 
     <Window.Resources>

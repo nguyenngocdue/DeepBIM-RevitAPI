@@ -3,7 +3,7 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!-- === COLORS === -->
-    <SolidColorBrush x:Key="Accent" Color="#3FDCCB"/>
+    <SolidColorBrush x:Key="Accent" Color="#59DCCB"/>
     <SolidColorBrush x:Key="AccentDark" Color="#2FB3A5"/>
     <SolidColorBrush x:Key="AccentLight" Color="#E6FCFA"/>
     <SolidColorBrush x:Key="Primary" Color="#007ACC"/>
@@ -22,7 +22,7 @@
 
 
 <!-- === Brushes === -->
-<SolidColorBrush x:Key="ShadcnPrimaryBg" Color="#3FDCCB"/>
+    <SolidColorBrush x:Key="ShadcnPrimaryBg" Color="#59DCCB"/>
 <SolidColorBrush x:Key="ShadcnPrimaryBorder" Color="#2FB3A5"/>
 <SolidColorBrush x:Key="ShadcnPrimaryHoverBg" Color="#2FB3A5"/>
 <SolidColorBrush x:Key="ShadcnOnPrimary" Color="#FFFFFF"/>

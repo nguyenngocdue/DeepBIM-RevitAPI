@@ -143,9 +143,36 @@ namespace DeepBIM.ViewModels
         public ObservableCollection<SheetRow> Rows { get; } = new();
         public bool SelectAll
         {
-            get => _selectAll;
-            set { _selectAll = value; foreach (var s in Sheets) s.IsChecked = value; OnChanged(nameof(SelectAll)); }
+            // Chỉ true khi tất cả item đang HIỂN THỊ đều check
+            get
+            {
+                if (SheetsView == null) return false;
+                var visible = SheetsView.Cast<object>().OfType<SheetItem>().ToList();
+                if (visible.Count == 0) return false;
+                return visible.All(s => s.IsChecked);
+            }
+            // Set → áp dụng cho CÁC ITEM ĐANG HIỂN THỊ (sau filter)
+            set
+            {
+                if (SheetsView == null) return;
+                foreach (SheetItem s in SheetsView) s.IsChecked = value;
+                OnChanged(nameof(SelectAll)); // cập nhật trạng thái checkbox
+            }
         }
+
+
+
+        private void HookSheetItem(SheetItem s)
+        {
+            s.PropertyChanged += (sender, e) =>
+            {
+                if (e.PropertyName == nameof(SheetItem.IsChecked))
+                    OnChanged(nameof(SelectAll));   // tự cập nhật lại ô Select all
+            };
+        }
+
+
+
         bool _selectAll;
 
 
@@ -272,6 +299,9 @@ namespace DeepBIM.ViewModels
         public ICommand ScopeChangedCommand { get; }
         public ICommand RefreshCommand { get; }
 
+        private bool _initializing;
+        public bool HasRevitSelection { get; private set; }
+
         public SheetManagerViewModel(Document doc, UIDocument uidoc, ICollection<ElementId> selectedIds = null)
         {
             _doc = doc;
@@ -281,20 +311,24 @@ namespace DeepBIM.ViewModels
                            .Where(v => !v.IsPlaceholder)
                            .OrderBy(v => v.SheetNumber, StringComparer.OrdinalIgnoreCase)
                            .ToList();
-
+            // Có selection là sheet?
+            var selectedSheetElements = new List<ViewSheet>();
             if (selectedIds != null && selectedIds.Any())
-            {
-                // ✅ Chỉ lấy các sheet đã được chọn trong Revit
-                var selectedSheetElements = allSheets
-                    .Where(s => selectedIds.Contains(s.Id))
-                    .ToList();
+                selectedSheetElements = allSheets.Where(s => selectedIds.Contains(s.Id)).ToList();
 
+            HasRevitSelection = selectedSheetElements.Any();
+
+            _initializing = true; // chặn handler khi set mặc định
+
+            if (HasRevitSelection)
+            {
+                // Default: Current selection
                 foreach (var s in selectedSheetElements)
                 {
-                    Sheets.Add(new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name });
+                    var item = new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name };
+                    Sheets.Add(item);
+                    HookSheetItem(item);
                 }
-
-                // ✅ Bật "Lựa chọn hiện tại"
                 ScopeOption = "Selected";
             }
             else
@@ -302,12 +336,14 @@ namespace DeepBIM.ViewModels
                 // ✅ Tải toàn bộ
                 foreach (var s in allSheets)
                 {
-                    Sheets.Add(new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name });
+                    var item = new SheetItem { Id = s.Id, Number = s.SheetNumber, Name = s.Name };
+                    Sheets.Add(item);
+                    HookSheetItem(item);
                 }
 
                 ScopeOption = "All";
             }
-
+            _initializing = false;
             SheetsView = CollectionViewSource.GetDefaultView(Sheets);
 
 
@@ -407,6 +443,7 @@ namespace DeepBIM.ViewModels
             }
 
             SheetsView.Refresh();
+            OnChanged(nameof(SelectAll));
         }
 
         private void SearchSheets()
@@ -435,12 +472,14 @@ namespace DeepBIM.ViewModels
 
             // Cập nhật UI
             SheetsView.Refresh();
+            OnChanged(nameof(SelectAll));
         }
 
         private void OnScopeChanged()
         {
             // Xóa dữ liệu cũ
             Sheets.Clear();
+            
 
             var allSheets = new FilteredElementCollector(_doc)
                 .OfClass(typeof(ViewSheet))
@@ -472,6 +511,7 @@ namespace DeepBIM.ViewModels
 
             // Cập nhật UI
             SheetsView.Refresh();
+            OnChanged(nameof(SelectAll));
         }
 
         private void ArrangeSheetNumbers()
@@ -582,6 +622,7 @@ namespace DeepBIM.ViewModels
             }
             // ✅ Buộc UI cập nhật
             SheetsView.Refresh();
+
 
         }
 

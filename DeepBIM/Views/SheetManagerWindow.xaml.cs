@@ -104,5 +104,7 @@ namespace DeepBIM.Views
                 vm.SearchCommand.Execute(null);
             }
         }
+
+      
     }
 }

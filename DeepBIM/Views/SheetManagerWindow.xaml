@@ -7,8 +7,10 @@
         xmlns:converters="clr-namespace:DeepBIM.Converters"
         mc:Ignorable="d"
         Width="1600" Height="805" WindowStartupLocation="CenterScreen"
-        Background="#FFF7F5F2" FontFamily="Segoe UI"
-        Title="DeepBIM - Change Sheet Name / Sheet Number">
+        Title="DeepBIM - Change Sheet Name / Sheet Number"
+        Icon="/DeepBIM;component/Resources/Icons/logo.png"
+        >
+
 
     <!-- ================= THEME / STYLES ================= -->
 

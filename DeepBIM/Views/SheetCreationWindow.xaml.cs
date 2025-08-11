@@ -98,6 +98,22 @@ namespace DeepBIM.Views
         }
 
 
+        private FamilyInstance GetTitleBlockInstanceOnSheet(Document doc, ViewSheet sheet)
+        {
+            return new FilteredElementCollector(doc, sheet.Id)
+                .OfCategory(BuiltInCategory.OST_TitleBlocks)
+                .OfClass(typeof(FamilyInstance))
+                .Cast<FamilyInstance>()
+                .FirstOrDefault();
+        }
+
+        private void EnsureSymbolActivated(FamilySymbol sym, Document doc)
+        {
+            if (!sym.IsActive)
+                sym.Activate(); // cần trong transaction
+        }
+
+
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
             // Kiểm tra dữ liệu
@@ -177,6 +193,36 @@ namespace DeepBIM.Views
                         {
                             // Nếu số mới đã tồn tại và khác với hiện tại → tạo tên mới
                             newSheetNumber = GetUniqueSheetNumber(newSheetNumber, existingSheetNumbers);
+                        }
+
+
+                        // Đổi Title Block type nếu khác
+                        // (symbol là FamilySymbol đã chọn từ combobox)
+                        if (symbol.Family.FamilyCategory != null &&
+                            symbol.Family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_TitleBlocks)
+                        {
+                            var tbInst = GetTitleBlockInstanceOnSheet(_doc, sheetToUpdate);
+
+                            if (tbInst != null && tbInst.Symbol.Id != symbol.Id)
+                            {
+                                EnsureSymbolActivated(symbol, _doc);         // đảm bảo đã Activate
+                                tbInst.ChangeTypeId(symbol.Id);              // đổi type của chính title block instance
+                            }
+                            else if (tbInst == null)
+                            {
+                                // (Hiếm) Sheet không có title block → tạo mới 1 instance
+                                // Thường Create(ViewSheet, symbol.Id) đã tạo sẵn; nhưng nếu thiếu, bạn có thể đặt bằng API:
+                                // Title block là FamilyInstance thuộc view sheet; điểm đặt không quan trọng (trên giấy).
+                                // Mẹo: dùng XYZ.Zero là đủ.
+                                EnsureSymbolActivated(symbol, _doc);
+                                _doc.Create.NewFamilyInstance(XYZ.Zero, symbol, sheetToUpdate); // API cũ; nếu lỗi, dùng overload mới theo version Revit
+                            }
+                        }
+                        else
+                        {
+                            // Guard: người dùng lỡ chọn family không phải Title Block
+                            MessageBox.Show("Selected symbol is not a Title Block type.", "Warning",
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
 
                         sheetToUpdate.SheetNumber = newSheetNumber;
