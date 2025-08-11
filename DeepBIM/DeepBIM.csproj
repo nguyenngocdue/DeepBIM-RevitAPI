@@ -1,342 +1,99 @@
-﻿<Window x:Class="DeepBIM.Views.SmartSelectionWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        mc:Ignorable="d"
-        Title="DeepBIM - Smart Selection"
-        Height="885"
-        Width="1075"
-        MinWidth="800"
-        MinHeight="600"
-        ResizeMode="CanResizeWithGrip"
-        WindowStartupLocation="CenterScreen"
-        >
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+        <UseWPF>true</UseWPF>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <PlatformTarget>x64</PlatformTarget>
+        <ImplicitUsings>true</ImplicitUsings>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <Configurations>Debug R21;Debug R22;Debug R23;Debug R24;Debug R25;Debug R26</Configurations>
+        <Configurations>$(Configurations);Release R21;Release R22;Release R23;Release R24;Release R25;Release R26</Configurations>
+    </PropertyGroup>
 
-    <!-- ===== THEME ===== -->
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="../Resources/Styles/Styles.xaml"/>
-                <ResourceDictionary Source="../Resources/Styles/ComboboxStyle.xaml"/>
-                <ResourceDictionary Source="../Resources/Styles/TextBlockStyle.xaml"/>
-                <ResourceDictionary Source="../Resources/Styles/DataGridStyle.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
+    <!-- Revit configuration -->
+    <PropertyGroup Condition="$(Configuration.Contains('R21'))">
+        <RevitVersion>2021</RevitVersion>
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.Contains('R22'))">
+        <RevitVersion>2022</RevitVersion>
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.Contains('R23'))">
+        <RevitVersion>2023</RevitVersion>
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.Contains('R24'))">
+        <RevitVersion>2024</RevitVersion>
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.Contains('R25'))">
+        <RevitVersion>2025</RevitVersion>
+        <TargetFramework>net8.0-windows</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.Contains('R26'))">
+        <RevitVersion>2026</RevitVersion>
+        <TargetFramework>net8.0-windows</TargetFramework>
+    </PropertyGroup>
 
-            <!-- Resources -->
-            <sys:Double x:Key="ElementSpacing">12</sys:Double>
-            <Thickness x:Key="FieldMargin">0,0,0,12</Thickness>
-            <Thickness x:Key="GroupMargin">0,0,12,20</Thickness>
-            <Duration x:Key="AnimationDuration">0:00:0.2</Duration>
-            <Color x:Key="HoverColor">#42A5F5</Color>
-            <Color x:Key="SelectedColor">#1976D2</Color>
-            <Color x:Key="AccentColor">#0288D1</Color>
-            <!-- Boolean to Visibility Converter -->
-            <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-        </ResourceDictionary>
-    </Window.Resources>
+    <!-- Launch configuration -->
+    <PropertyGroup>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+      
+        <StartAction>Program</StartAction>
+      <!-- <StartProgram>C:\Program Files\Autodesk\Revit $(RevitVersion)\Revit.exe</StartProgram> -->
+      <StartProgram>B:\SoftWare\Revit 2025\Revit.exe</StartProgram>
+        <StartArguments>/language ENG</StartArguments>
+    </PropertyGroup>
 
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <!-- Build configuration -->
+    <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
+    <PropertyGroup>
+        <IsRepackable>false</IsRepackable>
+        <DeployRevitAddin>true</DeployRevitAddin>
+    </PropertyGroup>
+    <ItemGroup>
+      <None Remove="Resources\Icons\logo-deepbim.png" />
+      <None Remove="Resources\Icons\logo.png" />
+      <None Remove="Resources\Icons\management16.png" />
+      <None Remove="Resources\Icons\management32.png" />
+      <None Remove="Resources\Icons\plus16.png" />
+      <None Remove="Resources\Icons\plus32.png" />
+      <None Remove="Resources\Icons\sheet-manage26.png" />
+      <None Remove="Resources\Icons\sheet-manage32.png" />
+    </ItemGroup>
 
-        <!-- ===== HEADER ===== -->
-        <Grid Grid.Row="0" Margin="0,0,0,24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <!-- Title and Icon -->
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Path Data="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M17,13h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"
-                      Fill="{DynamicResource Accent}"
-                      Width="28" Height="28" Margin="0,0,12,0"/>
-                <TextBlock Text="Smart Selection"
-                           Style="{StaticResource TextHeader}"
-                           FontSize="22"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-            <!-- Presets -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <ComboBox Width="200"
-                          Style="{StaticResource {x:Type ComboBox}}"
-                          ToolTip="Load or save selection presets"
-                          SelectedIndex="0"
-                          Margin="0,0,12,0">
-                    <ComboBoxItem>Load Preset...</ComboBoxItem>
-                    <ComboBoxItem>Recent Selection</ComboBoxItem>
-                    <ComboBoxItem>Structural Components</ComboBoxItem>
-                    <ComboBoxItem>MEP Elements</ComboBoxItem>
-                </ComboBox>
-                <Button Content="Save Preset"
-                        Style="{StaticResource SecondaryButton}"
-                        Width="100"
-                        Click="SavePreset_Click"/>
-            </StackPanel>
-        </Grid>
+    <ItemGroup>
+        <!-- Revit References -->
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="MaterialDesignColors" Version="5.2.2-ci998" />
+        <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" />
+        <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
 
-        <!-- ===== MAIN CONTENT ===== -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.5*"/>
-                <ColumnDefinition Width="2.5*"/>
-            </Grid.ColumnDefinitions>
+        <!-- MVVM -->
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="System.Windows.Interactivity.WPF" Version="2.0.20525" />
+    </ItemGroup>
 
-            <!-- === LEFT COLUMN: Categories === -->
-            <GroupBox Header="Categories"
-                      Style="{StaticResource ModernGroupBox}"
-                      Grid.Column="0"
-                      Margin="0,0,12,0"
-                      VerticalAlignment="Stretch">
-                <StackPanel Margin="0,12,0,12">
-                    <!-- Search Bar -->
-                    <Grid Margin="{StaticResource FieldMargin}">
-                        <TextBox x:Name="SearchBox"
-                                 Style="{StaticResource WatermarkTextBox}"
-                                 Tag="Search categories (e.g., Walls, Doors, Floors)..."
-                                 TextChanged="SearchBox_TextChanged"
-                                 KeyDown="SearchBox_KeyDown"/>
-                        <Button Content="🔍"
-                                Style="{StaticResource SecondaryButton}"
-                                Width="32"
-                                Height="32"
-                                HorizontalAlignment="Right"
-                                Margin="0,0,4,0"
-                                Click="SearchButton_Click"/>
-                    </Grid>
-                    <!-- Suggestions Popup -->
-                    <Popup x:Name="SearchSuggestionsPopup"
-                           PlacementTarget="{Binding ElementName=SearchBox}"
-                           Placement="Bottom"
-                           StaysOpen="False"
-                           IsOpen="{Binding ElementName=SearchBox, Path=Text.Length, Converter={StaticResource BoolToVisConverter}, ConverterParameter=2}">
-                        <Border Background="{DynamicResource AccentLight}"
-                                BorderBrush="{DynamicResource Accent}"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                MaxHeight="150"
-                                MinWidth="200">
-                            <ListBox x:Name="SearchSuggestions"
-                                     SelectionChanged="SearchSuggestions_SelectionChanged"
-                                     Background="Transparent"
-                                     BorderThickness="0"/>
-                        </Border>
-                    </Popup>
-                    <!-- Category TreeView -->
-                    <TreeView x:Name="CategoryTreeView"
-                              BorderBrush="{DynamicResource CardBorder}"
-                              BorderThickness="1"
-                              Background="White"
-                              Padding="8"
-                              Height="Auto"
-                              ScrollViewer.VerticalScrollBarVisibility="Auto"
-                              Margin="{StaticResource FieldMargin}">
-                        <TreeView.ItemContainerStyle>
-                            <Style TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="False"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource ShadcnPrimaryHoverBg}"/>
-                                    </Trigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource ShadcnPrimaryHoverBg}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TreeView.ItemContainerStyle>
-                    </TreeView>
-                    <!-- Selection Summary -->
-                    <Border Background="{DynamicResource AccentLight}"
-                            BorderBrush="{DynamicResource Accent}"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="12,8"
-                            Margin="{StaticResource FieldMargin}">
-                        <TextBlock x:Name="SelectionSummary"
-                                   Text="{Binding SelectedCategoriesCount, StringFormat={}{0} categories selected}"
-                                   Foreground="{DynamicResource Accent}"
-                                   FontWeight="SemiBold"
-                                   FontSize="14">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedCategoriesCount}" Value="0">
-                                            <Setter Property="Foreground" Value="Gray"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding SelectedCategoriesCount}" Value="1">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <ColorAnimation Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
-                                                                       To="{StaticResource SelectedColor}"
-                                                                       Duration="{StaticResource AnimationDuration}"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding SelectedCategoriesCount, Converter={StaticResource BoolToVisConverter}}" Value="True">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <ColorAnimation Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
-                                                                       To="{StaticResource SelectedColor}"
-                                                                       Duration="{StaticResource AnimationDuration}"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Border>
-                </StackPanel>
-            </GroupBox>
+    <ItemGroup>
+        <Resource Include="Resources\Icons\logo.png" />
+        <Resource Include="Resources\Icons\management16.png" />
+        <Resource Include="Resources\Icons\management32.png" />
+        <Resource Include="Resources\Icons\plus16.png" />
+        <Resource Include="Resources\Icons\plus32.png" />
+        <Resource Include="Resources\Icons\RibbonIcon16.png" />
+        <Resource Include="Resources\Icons\RibbonIcon32.png" />
+        <Resource Include="Resources\Icons\sheet-manage26.png" />
+        <Resource Include="Resources\Icons\sheet-manage32.png" />
+    </ItemGroup>
 
-            <!-- === RIGHT COLUMN: Filters & Options === -->
-            <StackPanel Grid.Column="1">
-                <!-- Selection Scope -->
-                <GroupBox Header="Selection Scope"
-                          Style="{StaticResource ModernGroupBox}"
-                          Margin="{StaticResource GroupMargin}">
-                    <StackPanel Margin="0,12,0,12">
-                        <RadioButton Content="Current View"
-                                     IsChecked="True"
-                                     Margin="0,0,0,8"
-                                     ToolTip="Select elements in the active view only"/>
-                        <RadioButton Content="Entire Project"
-                                     Margin="0,0,0,8"
-                                     ToolTip="Select elements across the entire project"/>
-                        <RadioButton Content="Selected Views"
-                                     Margin="0,0,0,8"
-                                     ToolTip="Select elements in specific views"
-                                     Checked="SelectedViews_Checked"/>
-                    </StackPanel>
-                </GroupBox>
-
-                <!-- Filter by Properties -->
-                <GroupBox Header="Filter by Properties"
-                          Style="{StaticResource ModernGroupBox}"
-                          Margin="{StaticResource GroupMargin}">
-                    <StackPanel Margin="0,12,0,12" x:Name="FilterPanel">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
-                            <TextBlock Text="Level:" Width="90" Style="{StaticResource TextSubHeader}"/>
-                            <ComboBox x:Name="LevelComboBox"
-                                      Style="{StaticResource {x:Type ComboBox}}"
-                                      Width="200"
-                                      SelectedIndex="0"
-                                      SelectionChanged="LevelComboBox_SelectionChanged">
-                                <ComboBoxItem>All Levels</ComboBoxItem>
-                                <ComboBoxItem>Level 1</ComboBoxItem>
-                                <ComboBoxItem>Level 2</ComboBoxItem>
-                                <ComboBoxItem>Level 3</ComboBoxItem>
-                            </ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
-                            <TextBlock Text="Type:" Width="90" Style="{StaticResource TextSubHeader}"/>
-                            <ComboBox x:Name="TypeComboBox"
-                                      Style="{StaticResource {x:Type ComboBox}}"
-                                      Width="200"
-                                      SelectedIndex="0">
-                                <ComboBoxItem>All Types</ComboBoxItem>
-                                <ComboBoxItem>Type A</ComboBoxItem>
-                                <ComboBoxItem>Type B</ComboBoxItem>
-                            </ComboBox>
-                        </StackPanel>
-                        <Button Content="Add Property Filter"
-                                Style="{StaticResource SecondaryButton}"
-                                Width="140"
-                                HorizontalAlignment="Left"
-                                Click="AddPropertyFilter_Click"/>
-                    </StackPanel>
-                </GroupBox>
-
-                <!-- Advanced Options -->
-                <GroupBox Header="Advanced Options"
-                          Style="{StaticResource ModernGroupBox}"
-                          Margin="{StaticResource GroupMargin}">
-                    <StackPanel Margin="0,12,0,12">
-                        <CheckBox Content="Include Elements from Linked Models"
-                                  Margin="0,0,0,8"
-                                  ToolTip="Include elements from externally linked models"/>
-                        <CheckBox Content="Select Only Isolated Elements"
-                                  Margin="0,0,0,8"
-                                  ToolTip="Select elements not attached to others"/>
-                        <CheckBox Content="Highlight Selection in 3D View"
-                                  IsChecked="True"
-                                  Margin="0,0,0,8"
-                                  ToolTip="Highlight selected elements in the active 3D view"/>
-                        <CheckBox Content="Auto-Zoom to Selection"
-                                  Margin="0,0,0,8"
-                                  ToolTip="Automatically zoom to selected elements in the view"/>
-                    </StackPanel>
-                </GroupBox>
-
-                <!-- Preview -->
-                <Border Background="{DynamicResource AccentLight}"
-                        BorderBrush="{DynamicResource Accent}"
-                        BorderThickness="1"
-                        CornerRadius="6"
-                        Padding="12"
-                        Margin="{StaticResource GroupMargin}">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <TextBlock Text="🔍 Preview:"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,8,0"/>
-                        <TextBlock x:Name="PreviewCountText"
-                                   Text="{Binding SelectedElementsCount, StringFormat={}{0} elements will be selected}"
-                                   Foreground="{DynamicResource Accent}"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,12,0"/>
-                        <ProgressBar x:Name="SelectionProgress"
-                                     Width="100"
-                                     Height="6"
-                                     Value="{Binding SelectionProgressValue}"
-                                     Maximum="100"
-                                     Visibility="{Binding IsProcessing, Converter={StaticResource BoolToVisConverter}}"
-                                     Margin="0,0,12,0"/>
-                        <Button Content="Refresh"
-                                Style="{StaticResource SecondaryButton}"
-                                Width="90"
-                                Click="RefreshPreview_Click"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Grid>
-
-        <!-- ===== CONTROL BUTTONS ===== -->
-        <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,24,0,0">
-            <Button Content="Cancel"
-                    Style="{StaticResource CancelButton}"
-                    Width="120"
-                    Margin="0,0,12,0"
-                    Click="CancelButton_Click"/>
-            <Button Content="Apply"
-                    Style="{StaticResource OkButton}"
-                    Width="120"
-                    Click="ApplyButton_Click">
-                <Button.Triggers>
-                    <EventTrigger RoutedEvent="Button.Click">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                To="0.7" Duration="{StaticResource AnimationDuration}"
-                                                AutoReverse="True"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Button.Triggers>
-            </Button>
-        </StackPanel>
-    </Grid>
-</Window>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="xcopy /Y /F &quot;$(TargetDir)DeepBIM.dll&quot; &quot;%25AppData%25\Autodesk\Revit\Addins\2025\&quot;" />
+    </Target>
+</Project>
