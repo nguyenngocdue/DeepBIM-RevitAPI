@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:localConverters="clr-namespace:DeepBIM.Converters"
         mc:Ignorable="d"
         Title="DeepBIM - Smart Selection"
         Height="885"
@@ -34,6 +35,8 @@
             <Color x:Key="AccentColor">#0288D1</Color>
             <!-- Boolean to Visibility Converter -->
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+            <localConverters:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
+            
         </ResourceDictionary>
     </Window.Resources>
 
@@ -89,136 +92,86 @@
             </Grid.ColumnDefinitions>
 
             <!-- === LEFT COLUMN: Categories === -->
-            <GroupBox Header="Categories"
-                      Style="{StaticResource ModernGroupBox}"
-                      Grid.Column="0"
-                      Margin="0,0,12,0"
-                      VerticalAlignment="Stretch">
-                <StackPanel Margin="0,12,0,12">
-                    <!-- Search Bar -->
-                    <Grid Margin="{StaticResource FieldMargin}">
-                        <TextBox x:Name="SearchBox"
-                                 Style="{StaticResource WatermarkTextBox}"
-                                 Tag="Search categories (e.g., Walls, Doors, Floors)..."
-                                 TextChanged="SearchBox_TextChanged"
-                                 KeyDown="SearchBox_KeyDown"/>
-                        <Button Content="🔍"
-                                Style="{StaticResource SecondaryButton}"
-                                Width="32"
-                                Height="32"
-                                HorizontalAlignment="Right"
-                                Margin="0,0,4,0"
-                                Click="SearchButton_Click"/>
-                    </Grid>
-                    <!-- Suggestions Popup -->
-                    <Popup x:Name="SearchSuggestionsPopup"
-                           PlacementTarget="{Binding ElementName=SearchBox}"
-                           Placement="Bottom"
-                           StaysOpen="False"
-                           IsOpen="{Binding ElementName=SearchBox, Path=Text.Length, Converter={StaticResource BoolToVisConverter}, ConverterParameter=2}">
-                        <Border Background="{DynamicResource AccentLight}"
-                                BorderBrush="{DynamicResource Accent}"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                MaxHeight="150"
-                                MinWidth="200">
-                            <ListBox x:Name="SearchSuggestions"
-                                     SelectionChanged="SearchSuggestions_SelectionChanged"
-                                     Background="Transparent"
-                                     BorderThickness="0"/>
-                        </Border>
-                    </Popup>
-                    <!-- Category TreeView -->
-                    <TreeView x:Name="CategoryTreeView"
-                              BorderBrush="{DynamicResource CardBorder}"
-                              BorderThickness="1"
-                              Background="White"
-                              Padding="8"
-                              Height="Auto"
-                              ScrollViewer.VerticalScrollBarVisibility="Auto"
-                              Margin="{StaticResource FieldMargin}">
-                        <TreeView.ItemContainerStyle>
-                            <Style TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="False"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource ShadcnPrimaryHoverBg}"/>
-                                    </Trigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource ShadcnPrimaryHoverBg}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TreeView.ItemContainerStyle>
-                    </TreeView>
-                    <!-- Selection Summary -->
-                    <Border Background="{DynamicResource AccentLight}"
-                            BorderBrush="{DynamicResource Accent}"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="12,8"
-                            Margin="{StaticResource FieldMargin}">
-                        <TextBlock x:Name="SelectionSummary"
-                                   Text="{Binding SelectedCategoriesCount, StringFormat={}{0} categories selected}"
-                                   Foreground="{DynamicResource Accent}"
-                                   FontWeight="SemiBold"
-                                   FontSize="14">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedCategoriesCount}" Value="0">
-                                            <Setter Property="Foreground" Value="Gray"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding SelectedCategoriesCount}" Value="1">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <ColorAnimation Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
-                                                                       To="{StaticResource SelectedColor}"
-                                                                       Duration="{StaticResource AnimationDuration}"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding SelectedCategoriesCount, Converter={StaticResource BoolToVisConverter}}" Value="True">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <ColorAnimation Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
-                                                                       To="{StaticResource SelectedColor}"
-                                                                       Duration="{StaticResource AnimationDuration}"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+            <Border Grid.RowSpan="1" Style="{StaticResource Card}" Margin="0 0 12 0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Style="{StaticResource HeaderBar}">
+                        <TextBlock Text="All Categories" Foreground="White" FontWeight="SemiBold"/>
                     </Border>
-                </StackPanel>
-            </GroupBox>
+
+                    <TextBox Grid.Row="1" 
+         Style="{StaticResource WatermarkTextBox}"
+         Tag="🔎  Search Category. Press Enter to apply search."
+         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+         Margin="0,10,0,8">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <Border Grid.Row="2" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Padding="6">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Select all -->
+                            <CheckBox Content=" - Select all Categories - "
+                          IsChecked="{Binding SelectAll, Mode=TwoWay}"
+                          Margin="6 0 0 8"/>
+
+                            <!-- List populated from ViewModel -->
+                            <ListBox Grid.Row="1"
+                         ItemsSource="{Binding CategoryView}"
+                         BorderThickness="0">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel>
+                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="6 0"/>
+                                            <TextBlock Text="{Binding Display}" VerticalAlignment="Center" Margin="6 0"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+
+
+
+
+
+
+
 
             <!-- === RIGHT COLUMN: Filters & Options === -->
             <StackPanel Grid.Column="1">
                 <!-- Selection Scope -->
                 <GroupBox Header="Selection Scope"
-                          Style="{StaticResource ModernGroupBox}"
-                          Margin="{StaticResource GroupMargin}">
-                    <StackPanel Margin="0,12,0,12">
-                        <RadioButton Content="Current View"
-                                     IsChecked="True"
-                                     Margin="0,0,0,8"
-                                     ToolTip="Select elements in the active view only"/>
-                        <RadioButton Content="Entire Project"
-                                     Margin="0,0,0,8"
-                                     ToolTip="Select elements across the entire project"/>
-                        <RadioButton Content="Selected Views"
-                                     Margin="0,0,0,8"
-                                     ToolTip="Select elements in specific views"
-                                     Checked="SelectedViews_Checked"/>
-                    </StackPanel>
+                      Style="{StaticResource ModernGroupBox}"
+                      Margin="{StaticResource GroupMargin}">
+                            <StackPanel Margin="0,12,0,12">
+                                <RadioButton Content="Current View"
+                                 IsChecked="{Binding SelectionScope, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=CurrentView}"
+                                 Margin="0,0,0,8"
+                                 ToolTip="Select elements in the active view only"/>
+                                <RadioButton Content="Entire Project"
+                                 IsChecked="{Binding SelectionScope, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=EntireProject}"
+                                 Margin="0,0,0,8"
+                                 ToolTip="Select elements across the entire project"/>
+                                <RadioButton Content="Selected Views"
+                                 IsChecked="{Binding SelectionScope, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=SelectedViews}"
+                                 Margin="0,0,0,8"
+                                 ToolTip="Select elements in specific views"/>
+                            </StackPanel>   
                 </GroupBox>
 
                 <!-- Filter by Properties -->

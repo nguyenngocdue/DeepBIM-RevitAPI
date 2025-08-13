@@ -1,0 +1,169 @@
+﻿<Window x:Class="DeepBIM.Views.Ex1SmartSelectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
+        Title="DeepBIM - Smart Selection"
+        Height="885"
+        Width="1075"
+        MinWidth="800"
+        MinHeight="600"
+        ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterScreen"
+        >
+
+    <!-- ===== THEME ===== -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/Styles/Styles.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/ComboboxStyle.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/TextBlockStyle.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/DataGridStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Resources -->
+            <sys:Double x:Key="ElementSpacing">12</sys:Double>
+            <Thickness x:Key="FieldMargin">0,0,0,12</Thickness>
+            <Thickness x:Key="GroupMargin">0,0,12,20</Thickness>
+            <Duration x:Key="AnimationDuration">0:00:0.2</Duration>
+            <Color x:Key="HoverColor">#42A5F5</Color>
+            <Color x:Key="SelectedColor">#1976D2</Color>
+            <Color x:Key="AccentColor">#0288D1</Color>
+            
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== HEADER ===== -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <!-- Title and Icon -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Path Data="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M17,13h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"
+                      Fill="{DynamicResource Accent}"
+                      Width="28" Height="28" Margin="0,0,12,0"/>
+                <TextBlock Text="Smart Selection"
+                           Style="{StaticResource TextHeader}"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <!-- Presets -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="2.5*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- === LEFT COLUMN: Categories === -->
+            <Border Grid.RowSpan="1" Style="{StaticResource Card}" Margin="0 0 12 0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Style="{StaticResource HeaderBar}">
+                        <TextBlock Text="All Categories" Foreground="White" FontWeight="SemiBold"/>
+                    </Border>
+
+                    <TextBox Grid.Row="1" 
+         Style="{StaticResource WatermarkTextBox}"
+         Tag="🔎  Search Category. Press Enter to apply search."
+         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+         Margin="0,10,0,8">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <Border Grid.Row="2" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Padding="6">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Select all -->
+                            <CheckBox Content=" - Select all Categories - "
+                          IsChecked="{Binding SelectAll, Mode=TwoWay}"
+                          Margin="6 0 0 8"/>
+
+                            <!-- List populated from ViewModel -->
+                            <ListBox Grid.Row="1"
+                         ItemsSource="{Binding CategoryView}"
+                         BorderThickness="0">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel>
+                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="6 0"/>
+                                            <TextBlock Text="{Binding Display}" VerticalAlignment="Center" Margin="6 0"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+
+            <!-- === RIGHT COLUMN: Filters & Options === -->
+            <StackPanel Grid.Column="1">
+                <!-- Selection Scope -->
+
+                <!-- Filter by Properties -->
+
+                <!-- Advanced Options -->
+
+                <!-- Preview -->
+            </StackPanel>
+        </Grid>
+
+        <!-- ===== CONTROL BUTTONS ===== -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,24,0,0">
+            <Button Content="Cancel"
+                    Style="{StaticResource CancelButton}"
+                    Width="120"
+                    Margin="0,0,12,0"
+                    Click="CancelButton_Click"/>
+            <Button Content="Apply"
+                    Style="{StaticResource OkButton}"
+                    Width="120"
+                    Click="ApplyButton_Click">
+                <Button.Triggers>
+                    <EventTrigger RoutedEvent="Button.Click">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                To="0.7" Duration="{StaticResource AnimationDuration}"
+                                                AutoReverse="True"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Button.Triggers>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

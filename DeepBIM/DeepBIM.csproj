@@ -52,7 +52,7 @@
     <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
     <PropertyGroup>
         <IsRepackable>false</IsRepackable>
-        <DeployRevitAddin>true</DeployRevitAddin>
+        <DeployRevitAddin>false</DeployRevitAddin>
     </PropertyGroup>
     <ItemGroup>
       <None Remove="Resources\Icons\logo-deepbim.png" />
@@ -91,6 +91,12 @@
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
         <Resource Include="Resources\Icons\sheet-manage26.png" />
         <Resource Include="Resources\Icons\sheet-manage32.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\Ex1SmartSelectionWindow.xaml.cs">
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

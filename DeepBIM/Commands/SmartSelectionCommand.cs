@@ -19,8 +19,10 @@ namespace DeepBIM.Commands
                 var selectedIds = uidoc.Selection.GetElementIds();
 
                 // Khởi tạo Window + ViewModel
-                var win = new DeepBIM.Views.SmartSelectionWindow(); // Pass 'uiapp' as required by the constructor
-                win.DataContext = new DeepBIM.ViewModels.SmartSelectionViewModel(doc, uidoc, selectedIds);
+                var win = new DeepBIM.Views.SmartSelectionWindow(doc, uidoc); // Pass 'uiapp' as required by the constructor
+
+
+                win.DataContext = new DeepBIM.ViewModels.SmartSelectionViewModel(doc, uidoc);
 
                 // Đặt owner là Revit để form modal và luôn trên cùng
                 new WindowInteropHelper(win) { Owner = uiapp.MainWindowHandle };

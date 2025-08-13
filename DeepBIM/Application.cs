@@ -12,6 +12,8 @@ namespace DeepBIM
     [UsedImplicitly]
     public class Application : ExternalApplication
     {
+        public static object Current { get; internal set; }
+
         public override void OnStartup()
         {
             CreateRibbon();
