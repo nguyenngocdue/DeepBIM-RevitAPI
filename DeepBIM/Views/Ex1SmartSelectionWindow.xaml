@@ -89,7 +89,7 @@
                          Style="{StaticResource WatermarkTextBox}"
                          Tag="🔎  Search Category. Press Enter to apply search."
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="0,10,0,8">
+                         Margin="0,10,0,8">     
                         <TextBox.InputBindings>
                             <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
                         </TextBox.InputBindings>
@@ -155,7 +155,8 @@
             <Button Content="Apply"
                     Style="{StaticResource OkButton}"
                     Width="120"
-                    Click="ApplyButton_Click">
+                     Command="{Binding ApplyCommand}"
+                    >
                 <Button.Triggers>
                     <EventTrigger RoutedEvent="Button.Click">
                         <BeginStoryboard>

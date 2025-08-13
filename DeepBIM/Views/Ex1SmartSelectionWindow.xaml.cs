@@ -29,10 +29,7 @@ namespace DeepBIM.Views
             this.Close();
         }
 
-        private void ApplyButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
+    
     }
   
 }

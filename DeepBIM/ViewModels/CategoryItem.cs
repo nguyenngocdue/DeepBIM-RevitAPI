@@ -8,6 +8,8 @@ namespace DeepBIM.ViewModels
         private bool _isChecked;
         private string _display;
 
+        public ElementId CategoryId { get; set; }
+
         public string Display
         {
             get => _display;
