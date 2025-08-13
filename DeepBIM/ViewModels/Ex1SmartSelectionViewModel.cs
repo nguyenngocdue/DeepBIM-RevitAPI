@@ -1,64 +1,120 @@
 ﻿using Autodesk.Revit.UI;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace DeepBIM.ViewModels
 {
     public class Ex1SmartSelectionViewModel: INotifyPropertyChanged
     {
         private UIApplication _uiApp;
-        private Document _doc;
         private UIDocument _uiDoc;
+        private Document _doc;
 
-        public ObservableCollection<CategoryItem>  CategoryView { get; set; }
-        public event PropertyChangedEventHandler PropertyChanged;
+        public ObservableCollection<CategoryItem> CategoryView { get; set; }
 
-        public Ex1SmartSelectionViewModel(UIApplication uiapp, UIDocument uidoc, Document doc) 
+        private bool? _selectAll;
+        public bool? SelectAll
         {
-            _uiApp = uiapp;
-            _uiDoc = uidoc;
+            get => _selectAll;
+            set
+            {
+                if (_selectAll != value)
+                {
+                    _selectAll = value;
+                    // Khi SelectAll thay đổi, cập nhật tất cả các mục
+                    if (value.HasValue)
+                    {
+                        foreach (var item in CategoryView)
+                        {
+                            item.IsChecked = value.Value;
+                        }
+                    }
+                    // notify UI need to update
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+    
+        public Ex1SmartSelectionViewModel(UIApplication uiApp, UIDocument uiDoc, Document doc)
+        {
+            _uiApp = uiApp;
+            _uiDoc = uiDoc;
             _doc = doc;
             CategoryView = new ObservableCollection<CategoryItem>();
 
-            // Fetch categories and bind them
+            // Bước 1: Tải danh mục
             LoadCategories();
 
+            // Khởi tạo SelectAll với giá trị null (không chọn gì)
+            _selectAll = false;
+
+            // Bước 2: Đăng ký sự kiện PropertyChanged cho từng item
+            foreach (var item in CategoryView)
+            {
+                item.PropertyChanged += OnCategoryItemPropertyChanged;
+            }
 
         }
 
-        // Method to load all categories from Revit
         private void LoadCategories()
         {
-            // Clear the CategoryView to avoid duplicates
             CategoryView.Clear();
 
-            // Get all categories from the Revit document
             Categories allCategories = _doc.Settings.Categories;
-            foreach (Category category in allCategories) {
-                //skip invalid categories
-                if(category.Name != null)
+            foreach (Category category in allCategories)
+            {
+                if (!string.IsNullOrEmpty(category.Name))
                 {
-                    CategoryView.Add(new CategoryItem
+                    var item = new CategoryItem
                     {
-                        Display = category.Name,  // Name of the category
-                        IsChecked = false          // Initial checkbox state
-                    });
+                        Display = category.Name,
+                        IsChecked = false
+                    };
+                    CategoryView.Add(item);
                 }
             }
 
-
-            //Notify the UI that the collection has changed
             OnPropertyChanged(nameof(CategoryView));
         }
 
-        private void OnPropertyChanged(string propertyName)
+        private void OnCategoryItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(CategoryItem.IsChecked))
+            {
+                UpdateSelectAllState();
+            }
+        }
+
+        private void UpdateSelectAllState()
+        {
+            var checkedCount = CategoryView.Count(c => c.IsChecked);
+            var totalCount = CategoryView.Count;
+
+            bool? newState;
+
+            if (checkedCount == 0)
+                newState = false;
+            else if (checkedCount == totalCount)
+                newState = true;
+            else
+                newState = null; // Indeterminate
+
+            // Chỉ cập nhật nếu thay đổi, tránh vòng lặp
+            if (_selectAll != newState)
+            {
+                _selectAll = newState;
+                OnPropertyChanged(nameof(SelectAll));
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        // This method is used to notify the UI that a property has changed
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
     }
 }

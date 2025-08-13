@@ -21,12 +21,12 @@ namespace DeepBIM.Views
         {
             InitializeComponent();
             viewModel = new Ex1SmartSelectionViewModel(uiapp, uidoc, doc);
-            DataContext = viewModel;
+            this.DataContext = viewModel;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-
+            this.Close();
         }
 
         private void ApplyButton_Click(object sender, RoutedEventArgs e)
