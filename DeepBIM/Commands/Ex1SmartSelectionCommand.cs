@@ -22,7 +22,9 @@ namespace DeepBIM.Commands
                 win.DataContext = new DeepBIM.ViewModels.Ex1SmartSelectionViewModel(uiapp, uidoc, doc);
                 
                 // Show the window as a dialog
-                win.ShowDialog(); // or .Show() if you want it non-modal
+                //win.ShowDialog(); // or .Show() if you want it non-modal
+                win.Show(); // or .Show() if you want it non-modal
+                win.Activate();
 
                 return Result.Succeeded;
             }

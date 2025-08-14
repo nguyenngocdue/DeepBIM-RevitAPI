@@ -2,14 +2,49 @@
 using Autodesk.Revit.UI;
 using DeepBIM.Events;
 using DeepBIM.Utils;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;                // Application
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace DeepBIM.ViewModels
 {
+
+    // ===== Row model cho bảng Processing =====
+    public class ProcessingRow : INotifyPropertyChanged
+    {
+        private System.Windows.Media.Color _color = System.Windows.Media.Colors.Transparent;
+        public System.Windows.Media.Color Color
+        {
+            get => _color;
+            set => _color = value;
+        }
+
+        public ElementId CategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public int RowIndex { get; set; }
+
+        private int _amount;
+        public int Amount { get => _amount; set { if (_amount != value) { _amount = value; OnPropertyChanged(nameof(Amount)); } } }
+       
+
+        private Brush _colorBrush = Brushes.Transparent;
+        public Brush ColorBrush { get => _colorBrush; set { if (_colorBrush != value) { _colorBrush = value; OnPropertyChanged(nameof(ColorBrush)); } } }
+
+        private bool _isIsolated;
+        public bool IsIsolated { get => _isIsolated; set { if (_isIsolated != value) { _isIsolated = value; OnPropertyChanged(nameof(IsIsolated)); } } }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+    }
+
+    // ===== ViewModel chính =====
     public class Ex1SmartSelectionViewModel : INotifyPropertyChanged
     {
         private readonly UIApplication _uiApp;
@@ -17,15 +52,20 @@ namespace DeepBIM.ViewModels
         private readonly Document _doc;
         private readonly View _view;
 
-        // External event (để sẵn nếu bạn cần sau này)
+        // Dispatcher UI để cập nhật ObservableCollection an toàn
+        private readonly Dispatcher _uiDispatcher;
+
+        // External Event (DeepBIM.Events)
         private readonly ExternalRevitEventHandler _externalHandler;
         private readonly ExternalEvent _externalEvent;
 
         public ObservableCollection<CategoryItem> CategoryView { get; set; }
         private ObservableCollection<CategoryItem> _allCategories;
 
-        // === Select All (tri-state) ===
-        private bool? _selectAll;
+        public ObservableCollection<ProcessingRow> ProcessingRows { get; } = new();
+
+        // ==== Select All (tri-state) ====
+        private bool? _selectAll = false;
         public bool? SelectAll
         {
             get => _selectAll;
@@ -34,42 +74,61 @@ namespace DeepBIM.ViewModels
                 if (_selectAll != value)
                 {
                     _selectAll = value;
-                    if (value.HasValue)
-                    {
-                        foreach (var item in CategoryView)
-                            item.IsChecked = value.Value;
-                    }
+                    if (value.HasValue && CategoryView != null)
+                        foreach (var item in CategoryView) item.IsChecked = value.Value;
                     OnPropertyChanged();
                     RaiseCommandsCanExecuteChanged();
                 }
             }
         }
 
-        // === Commands ===
+        // ==== Commands ====
         public ICommand ApplyColorCommand { get; }
         public ICommand ClearOverridesCommand { get; }
         private ICommand SetColorCommand { get; }
-        public ICommand ApplyCommand { get; } // Giữ nguyên lệnh select elements
+        public ICommand ApplyCommand { get; }
+
+        // (bạn có thể chuyển 4 command dưới sang ExternalEvent tương tự nếu muốn)
+        public ICommand ToggleIsolateCommand { get; }
+        public ICommand HighlightCommand { get; }
+        public ICommand EditColorCommand { get; }
+        public ICommand ResetRowCommand { get; }
+        public ICommand DeleteRowCommand { get; }
 
         public Ex1SmartSelectionViewModel(UIApplication uiApp, UIDocument uiDoc, Document doc)
         {
             _uiApp = uiApp;
             _uiDoc = uiDoc;
-            _doc = doc;
-            _view = _uiDoc.ActiveView;
+            _doc   = doc;
+            _view  = _uiDoc.ActiveView;
 
+            // Lưu dispatcher UI hiện tại
+            _uiDispatcher  = Dispatcher.CurrentDispatcher;
+
+            // External Event
+            _externalHandler = new ExternalRevitEventHandler();
+            _externalEvent   = ExternalEvent.Create(_externalHandler);
+
+            // Categories
             CategoryView = new ObservableCollection<CategoryItem>();
             LoadCategories();
 
-            _selectAll = false;
-
+            // ---- Commands ----
             ApplyColorCommand = new RelayCommand(
-                execute: ApplyElementColor_ByElement,
+                execute: () =>
+                {
+                    _externalHandler.SetAction(app => ApplyElementColor_ByElement_API(app));
+                    _externalEvent.Raise();
+                },
                 canExecute: () => CategoryView != null && CategoryView.Any(c => c.IsChecked)
             );
 
             ClearOverridesCommand = new RelayCommand(
-                execute: ClearOverrides_ByElement,
+                execute: () =>
+                {
+                    _externalHandler.SetAction(app => ClearOverrides_ByElement_API(app));
+                    _externalEvent.Raise();
+                },
                 canExecute: () => CategoryView != null && CategoryView.Any(c => c.IsChecked)
             );
 
@@ -78,6 +137,7 @@ namespace DeepBIM.ViewModels
                 canExecute: (param) => !string.IsNullOrWhiteSpace(param as string)
             );
 
+            // Chọn elements theo category (không đổi đồ họa) → có thể giữ chạy trực tiếp
             ApplyCommand = new RelayCommand(
                 execute: ApplyUI,
                 canExecute: () => CategoryView != null && CategoryView.Any(c => c.IsChecked)
@@ -86,24 +146,20 @@ namespace DeepBIM.ViewModels
             RehookPropertyEvents();
         }
 
+        // ===== Load category list =====
         private void LoadCategories()
         {
             var items = _doc.Settings.Categories
                 .Cast<Category>()
-                .Where(cat => !string.IsNullOrEmpty(cat.Name) &&
-                              (cat.CategoryType == CategoryType.Model || cat.CategoryType == CategoryType.Annotation) &&
-                              cat.Parent == null)
-                .Select(cat => new CategoryItem
-                {
-                    Display = cat.Name,
-                    CategoryId = cat.Id,
-                    IsChecked = false
-                })
+                .Where(cat => !string.IsNullOrEmpty(cat.Name)
+                           && (cat.CategoryType == CategoryType.Model || cat.CategoryType == CategoryType.Annotation)
+                           && cat.Parent == null)
+                .Select(cat => new CategoryItem { Display = cat.Name, CategoryId = cat.Id, IsChecked = false })
                 .OrderBy(x => x.Display, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             _allCategories = new ObservableCollection<CategoryItem>(items);
-            CategoryView = new ObservableCollection<CategoryItem>(items);
+            CategoryView   = new ObservableCollection<CategoryItem>(items);
 
             RehookPropertyEvents();
         }
@@ -119,11 +175,11 @@ namespace DeepBIM.ViewModels
 
         private void UpdateSelectAllState()
         {
-            var checkedCount = CategoryView.Count(c => c.IsChecked);
-            var totalCount = CategoryView.Count;
+            var total       = CategoryView?.Count ?? 0;
+            var checkedCount= CategoryView?.Count(c => c.IsChecked) ?? 0;
 
             bool? newState = checkedCount == 0 ? false :
-                             (checkedCount == totalCount ? true : (bool?)null);
+                             (checkedCount == total ? true : (bool?)null);
 
             if (_selectAll != newState)
             {
@@ -134,12 +190,12 @@ namespace DeepBIM.ViewModels
 
         private void RaiseCommandsCanExecuteChanged()
         {
-            (ApplyColorCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (ApplyColorCommand     as RelayCommand)?.RaiseCanExecuteChanged();
             (ClearOverridesCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (ApplyCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (ApplyCommand          as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
-        // === Chọn elements theo Category (giữ nguyên ý tưởng của bạn) ===
+        // ======= UI: chọn elements theo Category (không thay đổi đồ hoạ) =======
         private void ApplyUI()
         {
             var selectedCategories = CategoryView.Where(item => item.IsChecked).ToList();
@@ -152,35 +208,25 @@ namespace DeepBIM.ViewModels
             var elementIds = new List<ElementId>();
             try
             {
-                using (var t = new Transaction(_doc, "Select Elements"))
+                foreach (var item in selectedCategories)
                 {
-                    t.Start();
+                    var elements = new FilteredElementCollector(_doc)
+                        .OfCategoryId(item.CategoryId)
+                        .WhereElementIsNotElementType()
+                        .ToElements();
 
-                    foreach (var item in selectedCategories)
-                    {
-                        var elements = new FilteredElementCollector(_doc)
-                            .OfCategoryId(item.CategoryId)
-                            .WhereElementIsNotElementType()
-                            .ToElements();
-
-                        foreach (var elem in elements)
-                        {
-                            if (elem.Id != ElementId.InvalidElementId)
-                                elementIds.Add(elem.Id);
-                        }
-                    }
-
-                    if (elementIds.Count > 10000)
-                    {
-                        TaskDialog.Show("Cảnh báo", $"Quá nhiều phần tử ({elementIds.Count}), chỉ chọn 10,000 đầu.");
-                        elementIds = elementIds.Take(10000).ToList();
-                    }
-
-                    _uiApp.ActiveUIDocument.Selection.SetElementIds(elementIds);
-                    t.Commit();
-
-                    TaskDialog.Show("Thành công", $"Đã chọn {elementIds.Count} phần tử.");
+                    foreach (var elem in elements)
+                        if (elem.Id != ElementId.InvalidElementId) elementIds.Add(elem.Id);
                 }
+
+                if (elementIds.Count > 10000)
+                {
+                    TaskDialog.Show("Cảnh báo", $"Quá nhiều phần tử ({elementIds.Count}), chỉ chọn 10,000 đầu.");
+                    elementIds = elementIds.Take(10000).ToList();
+                }
+
+                _uiApp.ActiveUIDocument.Selection.SetElementIds(elementIds);
+                TaskDialog.Show("Thành công", $"Đã chọn {elementIds.Count} phần tử.");
             }
             catch (Exception ex)
             {
@@ -188,33 +234,22 @@ namespace DeepBIM.ViewModels
             }
         }
 
-        // === Search ===
+        // ===== Search =====
         private string _searchText;
         public string SearchText
         {
             get => _searchText;
-            set
-            {
-                if (_searchText != value)
-                {
-                    _searchText = value;
-                    OnPropertyChanged();
-                    ExecuteSearchCommand(null);
-                }
-            }
+            set { if (_searchText != value) { _searchText = value; OnPropertyChanged(); ExecuteSearchCommand(null); } }
         }
 
         private RelayCommand _searchCommand;
         public ICommand SearchCommand => _searchCommand ??= new RelayCommand(ExecuteSearchCommand);
 
-        private void ExecuteSearchCommand(object parameter)
+        private void ExecuteSearchCommand(object _)
         {
             IEnumerable<CategoryItem> source = _allCategories;
             if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                source = _allCategories.Where(x =>
-                    x.Display.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
-            }
+                source = _allCategories.Where(x => x.Display.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
             CategoryView = new ObservableCollection<CategoryItem>(source.OrderBy(x => x.Display));
             OnPropertyChanged(nameof(CategoryView));
@@ -223,169 +258,41 @@ namespace DeepBIM.ViewModels
             RaiseCommandsCanExecuteChanged();
         }
 
-        // ===================================================
-        // COLOR FEATURES
-        // ===================================================
+        // ===== Color options =====
+        private System.Windows.Media.Color _selectedColor = Colors.Yellow;
+        public System.Windows.Media.Color SelectedColor { get => _selectedColor; set { if (_selectedColor != value) { _selectedColor = value; OnPropertyChanged(); } } }
 
-        private System.Windows.Media.Color _selectedColor = System.Windows.Media.Colors.Yellow;
-        public System.Windows.Media.Color SelectedColor
-        {
-            get => _selectedColor;
-            set
-            {
-                if (_selectedColor != value)
-                {
-                    _selectedColor = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        // 0..90 theo UI (Revit cho 0..100)
+        // 0..90 theo UI (Revit 0..100)
         private int _selectedTransparency = 0;
-        public int SelectedTransparency
-        {
-            get => _selectedTransparency;
-            set
-            {
-                if (_selectedTransparency != value)
-                {
-                    _selectedTransparency = Math.Max(0, Math.Min(90, value));
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public int SelectedTransparency { get => _selectedTransparency; set { if (_selectedTransparency != value) { _selectedTransparency = Math.Max(0, Math.Min(90, value)); OnPropertyChanged(); } } }
 
         private bool _isHalftone;
-        public bool IsHalftone
-        {
-            get => _isHalftone;
-            set
-            {
-                if (_isHalftone != value)
-                {
-                    _isHalftone = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public bool IsHalftone { get => _isHalftone; set { if (_isHalftone != value) { _isHalftone = value; OnPropertyChanged(); } } }
 
         public void SetColor(string colorName)
         {
             var colorObj = ColorConverter.ConvertFromString(colorName);
-            if (colorObj is System.Windows.Media.Color wpfColor)
-            {
-                SelectedColor = wpfColor;
-            }
-            else
-            {
-                TaskDialog.Show("Lỗi", $"Không nhận diện được màu: '{colorName}'.\n" +
-                    "Hỗ trợ tên màu (Red, Blue, …) hoặc mã hex (#FF0000).");
-            }
+            if (colorObj is System.Windows.Media.Color wpfColor) SelectedColor = wpfColor;
+            else TaskDialog.Show("Lỗi", $"Không nhận diện được màu: '{colorName}'. Hỗ trợ tên màu (Red, Blue, …) hoặc mã hex (#FF0000).");
         }
 
-        // === Áp dụng tô màu Category theo View hiện tại ===
-        public void ApplyElementColor()
+        // ===== ExternalEvent: APPLY BY ELEMENT (API) =====
+        private void ApplyElementColor_ByElement_API(UIApplication app)
         {
-            var selectedCategories = CategoryView.Where(x => x.IsChecked).ToList();
-            if (!selectedCategories.Any())
-            {
-                TaskDialog.Show("Thông báo", "Vui lòng chọn ít nhất một danh mục.");
-                return;
-            }
-
-            // Chuẩn bị màu
-            var revitColor = new Autodesk.Revit.DB.Color(SelectedColor.R, SelectedColor.G, SelectedColor.B);
-
-            // Tìm Solid fill
-            var fill = PatternElementUtils.FindFillPatternByName(_doc, "<Solid fill>");
-            if (fill == null)
-            {
-                TaskDialog.Show("Lỗi", "Không tìm thấy mẫu tô đặc 'Solid fill'.");
-                return;
-            }
-
-            int applied = 0, skipped = 0;
-
-            try
-            {
-                using (var t = new Transaction(_doc, "Tô màu danh mục"))
-                {
-                    t.Start();
-
-                    var ogs = new OverrideGraphicSettings();
-                    #if REVIT2022_OR_NEWER
-                                        // API mới vẫn giữ các method này
-                    #endif
-                    ogs.SetSurfaceForegroundPatternId(fill.Id);
-                    ogs.SetSurfaceForegroundPatternColor(revitColor);
-                    ogs.SetSurfaceBackgroundPatternColor(revitColor);
-                    ogs.SetSurfaceTransparency(SelectedTransparency); // 0..100
-                    if (IsHalftone)
-                        ogs.SetHalftone(true);
-
-                    foreach (var cat in selectedCategories)
-                    {
-                        if (TrySetCategoryOverrides(cat.CategoryId, ogs)) applied++;
-                        else skipped++;
-                    }
-
-                    t.Commit();
-                }
-                TaskDialog.Show("Kết quả",
-                                 $"Đã tô màu {applied} category.\nBỏ qua {skipped} category không hỗ trợ override.");
-            }
-            catch (Exception ex)
-            {
-                TaskDialog.Show("Lỗi", "Không thể tô màu danh mục: " + ex.Message);
-            }
-        }
-
-        private bool TrySetElementOverrides(ElementId elemId, OverrideGraphicSettings ogs)
-        {
-            if (elemId == ElementId.InvalidElementId || _view == null) return false;
-            try
-            {
-                _view.SetElementOverrides(elemId, ogs);
-                return true;
-            }
-            catch
-            {
-                // ví dụ: element không cho override trong view này, hoặc view type không hỗ trợ
-                return false;
-            }
-        }
-
-        private bool TryClearElementOverrides(ElementId elemId)
-        {
-            if (elemId == ElementId.InvalidElementId || _view == null) return false;
-            try
-            {
-                _view.SetElementOverrides(elemId, new OverrideGraphicSettings());
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private void ApplyElementColor_ByElement()
-        {
-            var selectedCategories = CategoryView.Where(x => x.IsChecked).ToList();
-            if (!selectedCategories.Any())
+            var cats = CategoryView.Where(x => x.IsChecked).ToList();
+            if (!cats.Any())
             {
                 TaskDialog.Show("Notification", "Please select at least one category.");
                 return;
             }
 
-            var revitColor = new Autodesk.Revit.DB.Color(SelectedColor.R, SelectedColor.G, SelectedColor.B);
-            var fill = PatternElementUtils.FindFillPatternByName(_doc, "<Solid fill>");
-            if (fill == null)
-            {
-                TaskDialog.Show("Error", "Could not find the 'Solid fill' pattern.");
-                return;
-            }
+            var wpfColor     = SelectedColor;
+            var revitColor   = new Autodesk.Revit.DB.Color(wpfColor.R, wpfColor.G, wpfColor.B);
+            var transparency = SelectedTransparency;
+            var halftone     = IsHalftone;
+
+            var fill = FindSolidFill(_doc);
+            if (fill == null) { TaskDialog.Show("Error", "Could not find the 'Solid fill' pattern."); return; }
 
             int applied = 0, skipped = 0;
 
@@ -399,10 +306,10 @@ namespace DeepBIM.ViewModels
                     ogs.SetSurfaceForegroundPatternId(fill.Id);
                     ogs.SetSurfaceForegroundPatternColor(revitColor);
                     ogs.SetSurfaceBackgroundPatternColor(revitColor);
-                    ogs.SetSurfaceTransparency(SelectedTransparency);
-                    if (IsHalftone) ogs.SetHalftone(true);
+                    ogs.SetSurfaceTransparency(transparency);
+                    if (halftone) ogs.SetHalftone(true);
 
-                    foreach (var cat in selectedCategories)
+                    foreach (var cat in cats)
                     {
                         var elemIds = new FilteredElementCollector(_doc, _view.Id)
                             .OfCategoryId(cat.CategoryId)
@@ -411,16 +318,18 @@ namespace DeepBIM.ViewModels
 
                         foreach (var id in elemIds)
                         {
-                            if (TrySetElementOverrides(id, ogs)) applied++;
-                            else skipped++;
+                            try { _view.SetElementOverrides(id, ogs); applied++; }
+                            catch { skipped++; } // nếu không thỏa thì bỏ qua
                         }
                     }
 
                     t.Commit();
                 }
 
-                TaskDialog.Show("Result",
-                    $"Colored {applied} elements.\nSkipped {skipped} elements that could not be overridden.");
+                // cập nhật bảng sau khi API xong (UI thread)
+                RunOnUI(() => UpsertProcessingRows(cats,   wpfColor));
+
+                TaskDialog.Show("Result", $"Colored {applied} elements.\nSkipped {skipped} elements that could not be overridden.");
             }
             catch (Exception ex)
             {
@@ -428,45 +337,11 @@ namespace DeepBIM.ViewModels
             }
         }
 
-
-        private bool TrySetCategoryOverrides(ElementId catId, OverrideGraphicSettings ogs)
+        // ===== ExternalEvent: CLEAR BY ELEMENT (API) =====
+        private void ClearOverrides_ByElement_API(UIApplication app)
         {
-            if (!CanOverrideCategory(catId)) return false;
-            try
-            {
-                _view.SetCategoryOverrides(catId, ogs);
-                return true;
-            }
-            catch
-            {
-                // Ví dụ: "Category cannot be overridden" → bỏ qua
-                return false;
-            }
-        }
-
-        private bool CanOverrideCategory(ElementId catId)
-        {
-            try
-            {
-                if (catId == ElementId.InvalidElementId) return false;
-                // View dạng Schedule không hỗ trợ override đồ họa theo Category
-                if (_view is ViewSchedule) return false;
-
-                // Proxy check: nếu không thể Hide theo Category trong view này,
-                // thường cũng không override được.
-                return _view.CanCategoryBeHidden(catId);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        // === Xóa override của các Category đã chọn ===
-        private void ClearOverrides_ByElement()
-        {
-            var selectedCategories = CategoryView.Where(x => x.IsChecked).ToList();
-            if (!selectedCategories.Any())
+            var cats = CategoryView.Where(x => x.IsChecked).ToList();
+            if (!cats.Any())
             {
                 TaskDialog.Show("Notification", "Please select at least one category to clear overrides (By Element).");
                 return;
@@ -491,17 +366,17 @@ namespace DeepBIM.ViewModels
                             {
                                 var e = _doc.GetElement(id);
                                 if (e?.Category?.Id == null) { skipped++; continue; }
-                                if (!selectedCategories.Any(c => c.CategoryId == e.Category.Id)) { skipped++; continue; }
+                                if (!cats.Any(c => c.CategoryId == e.Category.Id)) { skipped++; continue; }
 
-                                if (TryClearElementOverrides(id)) cleared++;
-                                else skipped++;
+                                try { _view.SetElementOverrides(id, new OverrideGraphicSettings()); cleared++; }
+                                catch { skipped++; }
                             }
                             catch { failed++; }
                         }
                     }
                     else
                     {
-                        foreach (var cat in selectedCategories)
+                        foreach (var cat in cats)
                         {
                             var elemIds = new FilteredElementCollector(_doc, _view.Id)
                                 .OfCategoryId(cat.CategoryId)
@@ -510,8 +385,8 @@ namespace DeepBIM.ViewModels
 
                             foreach (var id in elemIds)
                             {
-                                if (TryClearElementOverrides(id)) cleared++;
-                                else skipped++;
+                                try { _view.SetElementOverrides(id, new OverrideGraphicSettings()); cleared++; }
+                                catch { skipped++; }
                             }
                         }
                     }
@@ -519,8 +394,22 @@ namespace DeepBIM.ViewModels
                     t.Commit();
                 }
 
-                TaskDialog.Show("Result",
-                    $"Reset overrides for {cleared} elements.\nSkipped: {skipped}\nOther failures: {failed}");
+                try { _view.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate); } catch { }
+
+                // cập nhật bảng (UI thread)
+                RunOnUI(() =>
+                {
+                    foreach (var row in ProcessingRows)
+                    {
+                        if (cats.Any(c => c.CategoryId == row.CategoryId))
+                        {
+                            row.Amount = CountElementsInViewByCategory(row.CategoryId);
+                            if (row.IsIsolated) row.IsIsolated = false;
+                        }
+                    }
+                });
+
+                TaskDialog.Show("Result", $"Reset overrides for {cleared} elements.\nSkipped: {skipped}\nOther failures: {failed}");
             }
             catch (Exception ex)
             {
@@ -528,8 +417,88 @@ namespace DeepBIM.ViewModels
             }
         }
 
-        // ===================================================
-        // Rehook property changed events
+        // ===== Helpers =====
+        private FillPatternElement FindSolidFill(Document doc)
+        {
+            var names = new[] { "Solid fill", "<Solid fill>" };
+            foreach (var n in names)
+            {
+                var e = FillPatternElement.GetFillPatternElementByName(doc, FillPatternTarget.Drafting, n)
+                        ?? FillPatternElement.GetFillPatternElementByName(doc, FillPatternTarget.Model, n);
+                if (e != null) return e;
+            }
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(FillPatternElement))
+                .Cast<FillPatternElement>()
+                .FirstOrDefault(fp => fp?.GetFillPattern()?.IsSolidFill == true);
+        }
+
+        private int CountElementsInViewByCategory(ElementId catId)
+        {
+            try
+            {
+                return new FilteredElementCollector(_doc, _view.Id)
+                    .OfCategoryId(catId)
+                    .WhereElementIsNotElementType()
+                    .GetElementCount();
+            }
+            catch { return 0; }
+        }
+
+        private void UpsertProcessingRows(IEnumerable<CategoryItem> coloredCats, System.Windows.Media.Color wpfColor)
+        {
+            foreach (var cat in coloredCats)
+            {
+                var amount   = CountElementsInViewByCategory(cat.CategoryId);
+                var existing = ProcessingRows.FirstOrDefault(r => r.CategoryId == cat.CategoryId);
+
+                if (existing == null)
+                {
+                    ProcessingRows.Add(new ProcessingRow
+                    {
+                        CategoryId   = cat.CategoryId,
+                        CategoryName = cat.Display,
+                        Amount       = amount,
+                        Color        = wpfColor,
+                        IsIsolated   = false
+                    });
+                }
+                else
+                {
+                    existing.Amount = amount;
+                    existing.Color  = wpfColor;
+                }
+            }
+
+            for (int i = 0; i < ProcessingRows.Count; i++)
+                ProcessingRows[i].RowIndex = i + 1;
+        }
+
+        // chạy action an toàn trên UI thread
+        private void RunOnUI(Action action)
+        {
+            if (action == null) return;
+
+            if (_uiDispatcher != null)
+            {
+                if (_uiDispatcher.CheckAccess()) action();
+                else _uiDispatcher.Invoke(action);
+                return;
+            }
+
+            var app = System.Windows.Application.Current;
+            if (app != null)
+            {
+                if (app.Dispatcher.CheckAccess()) action();
+                else app.Dispatcher.Invoke(action);
+                return;
+            }
+
+            // fallback (hiếm)
+            action();
+        }
+
+        // ===== Rehook property changed events =====
         private void RehookPropertyEvents()
         {
             foreach (var item in CategoryView)
@@ -539,6 +508,7 @@ namespace DeepBIM.ViewModels
             }
         }
 
+        // ===== INotifyPropertyChanged =====
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

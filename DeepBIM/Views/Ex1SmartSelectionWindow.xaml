@@ -26,8 +26,7 @@
                 <ResourceDictionary Source="../Resources/Styles/DataGridStyle.xaml"/>
                 <ResourceDictionary Source="../Resources/Styles/CheckBoxStyle.xaml"/>
                 <ResourceDictionary Source="../Resources/Styles/SliderStyle.xaml"/>
-                <ResourceDictionary Source="../Resources/Styles/ColorSwatchSty.xaml"/>
-                
+                <ResourceDictionary Source="../Resources/Styles/ColorSwatchStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Resources -->
@@ -38,13 +37,13 @@
             <Color x:Key="HoverColor">#42A5F5</Color>
             <Color x:Key="SelectedColor">#1976D2</Color>
             <Color x:Key="AccentColor">#0288D1</Color>
-
         </ResourceDictionary>
     </Window.Resources>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -75,6 +74,7 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="64"/>
                 <ColumnDefinition Width="2.5*"/>
             </Grid.ColumnDefinitions>
 
@@ -139,80 +139,295 @@
             </Border>
 
 
-            <!-- === RIGHT COLUMN: MAKE COLORS === -->
-            <StackPanel Grid.Column="1" Margin="10">
-                <TextBlock Text="Select fill color:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <!-- MIDDLE: round buttons -->
+            <StackPanel Grid.Column="1" Grid.Row="0" VerticalAlignment="Center">
+                <!-- MoveToRightCommand -->
+                <Button 
+              ToolTip="Move to processing list"
+              Command="{Binding MoveToRightCommand}"
+              Style="{StaticResource IconButton}" Content="&#xE110;" RenderTransformOrigin="0.5,0.5">
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="90"/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                </Button>
 
-                <!-- ColorPicker -->
-                <xctk:ColorPicker
-                     SelectedColor="{Binding SelectedColor, Mode=TwoWay}"
-                    DisplayColorAndName="True"
-                    UsingAlphaChannel="False"
-                    AvailableColorsSortingMode="HueSaturationBrightness"
-                    ShowStandardColors="False"
-                    ShowAvailableColors="True"
-                    ShowRecentColors="True"
-                    Margin="0,0,0,10"
-                    Width="220"
-                    Background="White"
-                    BorderBrush="#D0D5DD"
-                    BorderThickness="1"
-                    Padding="6"
-                    FontSize="13"
-                    Foreground="#344054"/>
+                <!-- MoveToLeftCommand -->
+                <Button
+              Style="{StaticResource IconButton}" Content="&#xE110;" ToolTip="Move left" RenderTransformOrigin="0.5,0.5">
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="-90"/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                </Button>
+                <Button Command="{Binding RefreshCommand}" Style="{StaticResource IconButton}" Content="&#xE72C;" ToolTip="Refresh list"/>
 
-                <!-- Transparency -->
-                <TextBlock Text="Transparency (0–90):" Margin="0,0,0,5"/>
-                <Slider 
-                        Style="{StaticResource ModernSlider}"
-                        Minimum="0" 
-                        Maximum="90" 
-                        TickFrequency="10" 
-                        IsSnapToTickEnabled="True"
-                        Value="{Binding SelectedTransparency, Mode=TwoWay}" />
-                <TextBlock Text="{Binding SelectedTransparency, StringFormat='Transparency: {0}%'}"
-                            Margin="0,4,0,10" Foreground="#555"/>
-
-                <!-- Halftone -->
-                <CheckBox 
-                    Content="Halftone" 
-                    Style="{StaticResource ModernCheckBox}"
-                    IsChecked="{Binding IsHalftone, Mode=TwoWay}" 
-                    Margin="0,0,0,10"
-                />
-
-                <!-- Buttons -->
-                <StackPanel Orientation="Horizontal" >
-                    <!-- Apply - Colorize Categories -->
-                    <Button Command="{Binding ApplyColorCommand}"
-                          Style="{StaticResource UpdateFilledButton}"
-                          Padding="10 6"
-                          Margin="0,0,8,0">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- Icon: bảng màu -->
-                            <TextBlock Text="🎨" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Apply - Colorize Categories" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Clear - Reset Overrides -->
-                    <Button Command="{Binding ClearOverridesCommand}"
-                          Style="{StaticResource WarningFilledButton}"
-                          Padding="10 6">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- Icon: cảnh báo / reset -->
-                            <TextBlock Text="⚠" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Clear - Reset Overrides" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-
+                <Button Style="{StaticResource IconButton}"
+              Content="&#xE74D;"
+              ToolTip="Delete selected rows"
+              Command="{Binding DeleteSelectedSheetsCommand}" />
             </StackPanel>
+
+
+            <!-- === RIGHT COLUMN: MAKE COLORS === -->
+            <Border  Grid.Column="2"  Style="{StaticResource Card}" Margin="0 0 12 0">
+                <StackPanel >
+                    <TextBlock Text="Select fill color:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+
+                    <!-- ColorPicker -->
+                    <xctk:ColorPicker
+                             SelectedColor="{Binding SelectedColor, Mode=TwoWay}"
+                            DisplayColorAndName="True"
+                            UsingAlphaChannel="False"
+                            AvailableColorsSortingMode="HueSaturationBrightness"
+                            ShowStandardColors="False"
+                            ShowAvailableColors="True"
+                            ShowRecentColors="True"
+                            Margin="0,0,0,10"
+                            Width="220"
+                            Background="White"
+                            BorderBrush="#D0D5DD"
+                            BorderThickness="1"
+                            Padding="6"
+                            FontSize="13"
+                            Foreground="#344054"/>
+
+                    <!-- Transparency -->
+                    <TextBlock Text="Transparency (0–90):" Margin="0,0,0,5"/>
+                    <Slider 
+                                Style="{StaticResource ModernSlider}"
+                                Minimum="0" 
+                                Maximum="90" 
+                                TickFrequency="10" 
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding SelectedTransparency, Mode=TwoWay}" />
+                    <TextBlock Text="{Binding SelectedTransparency, StringFormat='Transparency: {0}%'}"
+                                    Margin="0,4,0,10" Foreground="#555"/>
+
+                    <!-- Halftone -->
+                    <CheckBox 
+                            Content="Halftone" 
+                            Style="{StaticResource ModernCheckBox}"
+                            IsChecked="{Binding IsHalftone, Mode=TwoWay}" 
+                            Margin="0,0,0,10"
+                        />
+
+                    <!-- Buttons -->
+                    <StackPanel Orientation="Horizontal" >
+                        <!-- Apply - Colorize Categories -->
+                        <Button Command="{Binding ApplyColorCommand}"
+                                  Style="{StaticResource UpdateFilledButton}"
+                                  Padding="10 6"
+                                  Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Icon: bảng màu -->
+                                <TextBlock Text="🎨" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Apply - Colorize Categories" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Clear - Reset Overrides -->
+                        <Button Command="{Binding ClearOverridesCommand}"
+                                  Style="{StaticResource WarningFilledButton}"
+                                  Padding="10 6">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Icon: cảnh báo / reset -->
+                                <TextBlock Text="⚠" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Clear - Reset Overrides" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
 
         </Grid>
 
+
+
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0 10 12 0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border Style="{StaticResource HeaderBar}">
+                    <TextBlock Text="Processing (colored categories)" Foreground="White" FontWeight="SemiBold"/>
+                </Border>
+                <StackPanel Grid.Row="1" Margin="10">
+                    <!-- Processing table -->
+
+
+                    <!-- HEADER -->
+                    <Border Style="{StaticResource HeaderBar}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="48"/>
+                                <!-- No. -->
+                                <ColumnDefinition Width="*"/>
+                                <!-- Category -->
+                                <ColumnDefinition Width="90"/>
+                                <!-- Amount -->
+                                <ColumnDefinition Width="110"/>
+                                <!-- Color -->
+                                <ColumnDefinition Width="90"/>
+                                <!-- Isolate -->
+                                <ColumnDefinition Width="88"/>
+                                <!-- Highlight -->
+                                <ColumnDefinition Width="70"/>
+                                <!-- Edit -->
+                                <ColumnDefinition Width="80"/>
+                                <!-- Reset -->
+                                <ColumnDefinition Width="84"/>
+                                <!-- Delete -->
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="No."
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Category"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="Amount"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="Color"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="4" Text="Isolate"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="5" Text="Highlight"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="6" Text="Edit"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="7" Text="Reset"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="8" Text="Delete"
+                   Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- DATAGRID -->
+                    <DataGrid
+                          Grid.Row="1"
+                          ItemsSource="{Binding ProcessingRows}"
+                          AutoGenerateColumns="False"
+                          HeadersVisibility="None"
+                          CanUserAddRows="False"
+                          RowHeaderWidth="0"
+                          MinHeight="220"
+                          MaxHeight="320"
+                          AlternatingRowBackground="#FFF7F7F7"
+                          Background="White"
+                          BorderBrush="#D0D5DD"
+                          BorderThickness="1">
+                        <DataGrid.Resources>
+                            <!-- Header rõ ràng -->
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Height" Value="28"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Background" Value="#F5F7FA"/>
+                                <Setter Property="BorderBrush" Value="#D0D5DD"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="Padding" Value="8,0,8,0"/>
+                            </Style>
+                        </DataGrid.Resources>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="No." Width="48"
+                            Binding="{Binding RowIndex}"/>
+
+                            <DataGridTextColumn Header="Category" Width="*"
+                            Binding="{Binding CategoryName}"/>
+
+                            <DataGridTextColumn Header="Amount" Width="90"
+                            Binding="{Binding Amount}"/>
+
+                            <DataGridTemplateColumn Header="Color" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Width="28" Height="16" CornerRadius="3"
+                            BorderBrush="#D0D5DD" BorderThickness="1" Margin="0,0,6,0"
+                            Background="{Binding ColorBrush}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Isolate" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton
+                                            Content="{Binding IsIsolated, Converter={StaticResource BoolToOnOffTextConverter}, FallbackValue=Toggle}"
+                                            IsChecked="{Binding IsIsolated, Mode=TwoWay}"
+                                            Command="{Binding DataContext.ToggleIsolateCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>  
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Highlight" Width="88">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Highlight"
+                                            Command="{Binding DataContext.HighlightCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Edit" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Edit"
+                                            Command="{Binding DataContext.EditColorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Reset" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Reset"
+                            Command="{Binding DataContext.ResetRowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                            CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Delete" Width="84">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Delete"
+                            Command="{Binding DataContext.DeleteRowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                            CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+
+
+
         <!-- ===== CONTROL BUTTONS ===== -->
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
             Orientation="Horizontal"
             HorizontalAlignment="Right"
             Margin="0,24,0,0">
@@ -255,6 +470,11 @@
             </Button>
 
         </StackPanel>
-
     </Grid>
+
+
+
+
+
+
 </Window>

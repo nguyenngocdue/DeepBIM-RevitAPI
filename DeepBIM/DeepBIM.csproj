@@ -69,8 +69,10 @@
         <!-- Revit References -->
         <PackageReference Include="ClosedXML" Version="0.105.0" />
         <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739">
-          <PrivateAssets>True</PrivateAssets>
-          <GeneratePathProperty>True</GeneratePathProperty>
+          <PrivateAssets></PrivateAssets>
+          <IncludeAssets></IncludeAssets>
+          <GeneratePathProperty>False</GeneratePathProperty>
+          <NoWarn></NoWarn>
         </PackageReference>
         <PackageReference Include="MaterialDesignColors" Version="5.2.2-ci998" />
         <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
@@ -82,7 +84,6 @@
 
         <!-- MVVM -->
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-        <PackageReference Include="System.Windows.Interactivity.WPF" Version="2.0.20525" />
     </ItemGroup>
 
     <ItemGroup>

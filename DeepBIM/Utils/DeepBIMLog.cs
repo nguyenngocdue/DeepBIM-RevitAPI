@@ -69,9 +69,17 @@ namespace DeepBIM.Utils
         /// </summary>
         public static void LogDebug(string message)
         {
-#if DEBUG
-            Log($"[DEBUG] {message}");
-#endif
+        #if DEBUG
+                    Log($"[DEBUG] {message}");
+        #endif
+                }
         }
-    }
+        public static class Logger
+        {
+            public static void Info(string tag, Exception ex)
+            {
+                // Ghi log ra file, console hoặc output window
+                File.AppendAllText("log.txt", $"{DateTime.Now} [{tag}] {ex}\n");
+            }
+        }
 }
