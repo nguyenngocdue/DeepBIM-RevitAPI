@@ -1,0 +1,53 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ===== Compact Color Picker Resources ===== -->
+    <!-- Màu viền/nền -->
+    <SolidColorBrush x:Key="Cp.Border" Color="#E5E7EB"/>
+    <SolidColorBrush x:Key="Cp.Border.Hover" Color="#7C3AED"/>
+    <SolidColorBrush x:Key="Cp.Bg" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="Cp.Text" Color="#344054"/>
+
+    <!-- Nút mở popup: bo tròn + preview màu -->
+    <Style x:Key="ColorSwatchButton" TargetType="ToggleButton">
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Background" Value="{StaticResource Cp.Bg}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Cp.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="bd"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="8">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0">
+                            <!-- Vòng tròn preview màu -->
+                            <Ellipse Width="14" Height="14"
+                                 Stroke="#D1D5DB" StrokeThickness="1"
+                                 Fill="{Binding SelectedColor, RelativeSource={RelativeSource AncestorType=FrameworkElement}}"
+                                 Margin="0,0,8,0"/>
+                            <TextBlock Text="Choose color" Foreground="{StaticResource Cp.Text}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Cp.Border.Hover}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Cp.Border.Hover}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.6"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+</ResourceDictionary>

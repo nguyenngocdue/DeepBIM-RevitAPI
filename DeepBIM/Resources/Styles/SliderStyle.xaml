@@ -1,0 +1,98 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ===== Colors ===== -->
+    <Color x:Key="SliderTrackColor">#E4E4E7</Color>
+    <!-- track nền -->
+    <Color x:Key="SliderFillColor">#7C3AED</Color>
+    <!-- tím fill -->
+    <Color x:Key="SliderFillHoverColor">#6D28D9</Color>
+    <!-- tím hover -->
+    <Color x:Key="SliderThumbColor">#7C3AED</Color>
+    <!-- tím thumb -->
+    <Color x:Key="SliderThumbHoverColor">#6D28D9</Color>
+    <!-- tím thumb hover -->
+    <Color x:Key="SliderDisabledColor">#D4D4D8</Color>
+    <!-- disabled -->
+
+    <!-- ===== Brushes ===== -->
+    <SolidColorBrush x:Key="SliderTrackBrush" Color="{StaticResource SliderTrackColor}"/>
+    <SolidColorBrush x:Key="SliderFillBrush" Color="{StaticResource SliderFillColor}"/>
+    <SolidColorBrush x:Key="SliderFillHoverBrush" Color="{StaticResource SliderFillHoverColor}"/>
+    <SolidColorBrush x:Key="SliderThumbBrush" Color="{StaticResource SliderThumbColor}"/>
+    <SolidColorBrush x:Key="SliderThumbHoverBrush" Color="{StaticResource SliderThumbHoverColor}"/>
+    <SolidColorBrush x:Key="SliderDisabledBrush" Color="{StaticResource SliderDisabledColor}"/>
+
+    <!-- ===== Slider Style ===== -->
+    <Style x:Key="ModernSlider" TargetType="Slider">
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Track x:Name="PART_Track"
+                           IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                           Maximum="{TemplateBinding Maximum}"
+                           Minimum="{TemplateBinding Minimum}"
+                           Value="{TemplateBinding Value}">
+
+                            <!-- Fill -->
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton x:Name="FillPart"
+                                          Command="Slider.DecreaseLarge"
+                                          Style="{x:Null}"
+                                          Height="4"
+                                          Background="{StaticResource SliderFillBrush}"
+                                          BorderThickness="0"
+                                          Focusable="False"/>
+                            </Track.DecreaseRepeatButton>
+
+                            <!-- Empty -->
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton x:Name="EmptyPart"
+                                          Command="Slider.IncreaseLarge"
+                                          Style="{x:Null}"
+                                          Height="4"
+                                          Background="{StaticResource SliderTrackBrush}"
+                                          BorderThickness="0"
+                                          Focusable="False"/>
+                            </Track.IncreaseRepeatButton>
+
+                            <!-- Thumb -->
+                            <Track.Thumb>
+                                <Thumb x:Name="ThumbPart" Width="16" Height="16">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border CornerRadius="8"
+                                                Background="{TemplateBinding Background}"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                    <Thumb.Background>
+                                        <SolidColorBrush Color="{StaticResource SliderThumbColor}"/>
+                                    </Thumb.Background>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+
+                    <!-- Triggers -->
+                    <ControlTemplate.Triggers>
+                        <!-- Hover -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="FillPart" Property="Background" Value="{StaticResource SliderFillHoverBrush}"/>
+                            <Setter TargetName="ThumbPart" Property="Background" Value="{StaticResource SliderThumbHoverBrush}"/>
+                        </Trigger>
+
+                        <!-- Disabled -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="FillPart" Property="Background" Value="{StaticResource SliderDisabledBrush}"/>
+                            <Setter TargetName="EmptyPart" Property="Background" Value="{StaticResource SliderDisabledBrush}"/>
+                            <Setter TargetName="ThumbPart" Property="Background" Value="{StaticResource SliderDisabledBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

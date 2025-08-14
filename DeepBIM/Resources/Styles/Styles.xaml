@@ -73,6 +73,8 @@
 
 
 
+
+
     <!-- === FONTS === -->
     <FontFamily x:Key="FontMain">Segoe UI</FontFamily>
     <sys:Double x:Key="FontSizeSmall">12</sys:Double>
@@ -331,6 +333,8 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
+    
 
     <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource BaseActionButton}">
         <Setter Property="Background" Value="{StaticResource ShadcnSecondaryBg}"/>
@@ -623,8 +627,6 @@
 
 
 
-
-
     <!-- ===== Create (blue-600) — darker bg ===== -->
     <!-- Colors (cho ColorAnimation) -->
     <Color x:Key="ShadcnCreateColor">#2563EB</Color>
@@ -637,7 +639,6 @@
     <!-- blue-100 -->
     <Color x:Key="ShadcnCreateFocusRingColor">#93C5FD</Color>
     <!-- blue-300 -->
-
     <!-- Brushes -->
     <SolidColorBrush x:Key="ShadcnCreateBg" Color="{StaticResource ShadcnCreateColor}"/>
     <SolidColorBrush x:Key="ShadcnCreateBorder" Color="#1E40AF"/>
@@ -646,8 +647,6 @@
     <SolidColorBrush x:Key="ShadcnCreateDisabledBg" Color="{StaticResource ShadcnCreateDisabledColor}"/>
     <SolidColorBrush x:Key="ShadcnCreateDisabledText" Color="#3B82F6"/>
     <SolidColorBrush x:Key="ShadcnCreateFocusRing" Color="{StaticResource ShadcnCreateFocusRingColor}"/>
-
-
     <!-- ===== Create Filled Button (bg-blue-400) ===== -->
     <Style x:Key="CreateFilledButton" TargetType="Button" BasedOn="{StaticResource BaseActionButton}">
         <Setter Property="Background" Value="{StaticResource ShadcnCreateBg}"/>
@@ -732,16 +731,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-
-
-
-
-
-
-
-
-
+    <!-- ===== Cancel Button -->
     <Style x:Key="CancelButton" TargetType="Button" BasedOn="{StaticResource BaseActionButton}">
         <Setter Property="Background" Value="{StaticResource ShadcnDangerBg}"/>
         <Setter Property="BorderBrush" Value="{StaticResource ShadcnDangerBorder}"/>
@@ -807,7 +797,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-
+    <!-- ===== Ok Button -->
     <Style x:Key="OkButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="Effect">
@@ -883,16 +873,116 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
+    
+    <!-- ===== Waring Button -->
+    <!-- ===== Warning (yellow-600) — darker bg ===== -->
+    <!-- Colors -->
+    <Color x:Key="ShadcnWarningColor">#CA8A04</Color>
+    <!-- yellow-600 -->
+    <Color x:Key="ShadcnWarningHoverColor">#A16207</Color>
+    <!-- yellow-700 -->
+    <Color x:Key="ShadcnWarningPressedColor">#854D0E</Color>
+    <!-- yellow-800 -->
+    <Color x:Key="ShadcnWarningDisabledColor">#FEF9C3</Color>
+    <!-- yellow-100 -->
+    <Color x:Key="ShadcnWarningFocusRingColor">#FDE68A</Color>
+    <!-- yellow-300 -->
 
+    <!-- Brushes -->
+    <SolidColorBrush x:Key="ShadcnWarningBg" Color="{StaticResource ShadcnWarningColor}"/>
+    <SolidColorBrush x:Key="ShadcnWarningBorder" Color="#854D0E"/>
+    <!-- viền tối hơn -->
+    <SolidColorBrush x:Key="ShadcnWarningText" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ShadcnWarningDisabledBg" Color="{StaticResource ShadcnWarningDisabledColor}"/>
+    <SolidColorBrush x:Key="ShadcnWarningDisabledText" Color="#CA8A04"/>
+    <!-- yellow-600 -->
+    <SolidColorBrush x:Key="ShadcnWarningFocusRing" Color="{StaticResource ShadcnWarningFocusRingColor}"/>
 
+    <!-- ===== Warning Filled Button (bg-yellow-600) ===== -->
+    <Style x:Key="WarningFilledButton" TargetType="Button" BasedOn="{StaticResource BaseActionButton}">
+        <Setter Property="Background" Value="{StaticResource ShadcnWarningBg}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ShadcnWarningBorder}"/>
+        <Setter Property="Foreground" Value="{StaticResource ShadcnWarningText}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="4"
+                        Padding="{TemplateBinding Padding}">
+                        <!-- Brush cục bộ để animate màu mượt, không đụng brush resource -->
+                        <Border.Background>
+                            <SolidColorBrush Color="{StaticResource ShadcnWarningColor}"/>
+                        </Border.Background>
+                        <Border.RenderTransform>
+                            <ScaleTransform x:Name="scaleTransform" ScaleX="1" ScaleY="1"/>
+                        </Border.RenderTransform>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
 
+                    <ControlTemplate.Triggers>
+                        <!-- Hover -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="border"
+                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                    To="{StaticResource ShadcnWarningHoverColor}"
+                                                    Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                                     Storyboard.TargetProperty="ScaleX" To="1.02" Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                                     Storyboard.TargetProperty="ScaleY" To="1.02" Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="border"
+                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                    To="{StaticResource ShadcnWarningColor}"
+                                                    Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                                     Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetName="scaleTransform"
+                                                     Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
 
+                        <!-- Pressed -->
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Opacity" Value="0.9"/>
+                            <Setter TargetName="border" Property="Background">
+                                <Setter.Value>
+                                    <SolidColorBrush Color="{StaticResource ShadcnWarningPressedColor}"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
 
+                        <!-- Focus (keyboard) -->
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource ShadcnWarningFocusRing}"/>
+                            <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                        </Trigger>
 
-
-
-
-
+                        <!-- Disabled -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource ShadcnWarningDisabledBg}"/>
+                            <Setter Property="Foreground" Value="{StaticResource ShadcnWarningDisabledText}"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                            <Setter TargetName="border" Property="Opacity" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 
 

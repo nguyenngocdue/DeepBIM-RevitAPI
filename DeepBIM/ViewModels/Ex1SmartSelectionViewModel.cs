@@ -69,7 +69,7 @@ namespace DeepBIM.ViewModels
             );
 
             ClearOverridesCommand = new RelayCommand(
-                execute: ClearOverrides,
+                execute: ClearOverrides_ByElement,
                 canExecute: () => CategoryView != null && CategoryView.Any(c => c.IsChecked)
             );
 
@@ -341,13 +341,41 @@ namespace DeepBIM.ViewModels
             }
         }
 
+        private bool TrySetElementOverrides(ElementId elemId, OverrideGraphicSettings ogs)
+        {
+            if (elemId == ElementId.InvalidElementId || _view == null) return false;
+            try
+            {
+                _view.SetElementOverrides(elemId, ogs);
+                return true;
+            }
+            catch
+            {
+                // ví dụ: element không cho override trong view này, hoặc view type không hỗ trợ
+                return false;
+            }
+        }
+
+        private bool TryClearElementOverrides(ElementId elemId)
+        {
+            if (elemId == ElementId.InvalidElementId || _view == null) return false;
+            try
+            {
+                _view.SetElementOverrides(elemId, new OverrideGraphicSettings());
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         private void ApplyElementColor_ByElement()
         {
             var selectedCategories = CategoryView.Where(x => x.IsChecked).ToList();
             if (!selectedCategories.Any())
             {
-                TaskDialog.Show("Thông báo", "Vui lòng chọn ít nhất một danh mục.");
+                TaskDialog.Show("Notification", "Please select at least one category.");
                 return;
             }
 
@@ -355,7 +383,7 @@ namespace DeepBIM.ViewModels
             var fill = PatternElementUtils.FindFillPatternByName(_doc, "<Solid fill>");
             if (fill == null)
             {
-                TaskDialog.Show("Lỗi", "Không tìm thấy mẫu tô đặc 'Solid fill'.");
+                TaskDialog.Show("Error", "Could not find the 'Solid fill' pattern.");
                 return;
             }
 
@@ -363,7 +391,7 @@ namespace DeepBIM.ViewModels
 
             try
             {
-                using (var t = new Transaction(_doc, "Tô màu By Element"))
+                using (var t = new Transaction(_doc, "Color Fill By Element"))
                 {
                     t.Start();
 
@@ -376,38 +404,29 @@ namespace DeepBIM.ViewModels
 
                     foreach (var cat in selectedCategories)
                     {
-                        // Lấy toàn bộ element trong category
-                        var elements = new FilteredElementCollector(_doc, _view.Id)
+                        var elemIds = new FilteredElementCollector(_doc, _view.Id)
                             .OfCategoryId(cat.CategoryId)
                             .WhereElementIsNotElementType()
                             .ToElementIds();
 
-                        foreach (var elemId in elements)
+                        foreach (var id in elemIds)
                         {
-                            try
-                            {
-                                _view.SetElementOverrides(elemId, ogs);
-                                applied++;
-                            }
-                            catch
-                            {
-                                skipped++;
-                            }
+                            if (TrySetElementOverrides(id, ogs)) applied++;
+                            else skipped++;
                         }
                     }
 
                     t.Commit();
                 }
 
-                TaskDialog.Show("Kết quả",
-                    $"Đã tô màu {applied} phần tử.\nBỏ qua {skipped} phần tử không thể override.");
+                TaskDialog.Show("Result",
+                    $"Colored {applied} elements.\nSkipped {skipped} elements that could not be overridden.");
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Lỗi", "Không thể tô màu phần tử: " + ex.Message);
+                TaskDialog.Show("Error", "Failed to apply element color: " + ex.Message);
             }
         }
-
 
 
         private bool TrySetCategoryOverrides(ElementId catId, OverrideGraphicSettings ogs)
@@ -444,65 +463,70 @@ namespace DeepBIM.ViewModels
         }
 
         // === Xóa override của các Category đã chọn ===
-        private void ClearOverrides()
+        private void ClearOverrides_ByElement()
         {
             var selectedCategories = CategoryView.Where(x => x.IsChecked).ToList();
             if (!selectedCategories.Any())
             {
-                TaskDialog.Show("Thông báo", "Vui lòng chọn ít nhất một danh mục để xóa override.");
+                TaskDialog.Show("Notification", "Please select at least one category to clear overrides (By Element).");
                 return;
             }
+
+            var selectedInView = _uiDoc?.Selection?.GetElementIds();
+            bool clearOnlySelection = selectedInView != null && selectedInView.Count > 0;
 
             int cleared = 0, skipped = 0, failed = 0;
 
             try
             {
-                using (var t = new Transaction(_doc, "Clear category overrides"))
+                using (var t = new Transaction(_doc, "Clear element overrides (By Element)"))
                 {
                     t.Start();
 
-                    var resetOgs = new OverrideGraphicSettings(); // mặc định: reset
-                    foreach (var cat in selectedCategories)
+                    if (clearOnlySelection)
                     {
-                        var catId = cat.CategoryId;
+                        foreach (var id in selectedInView)
+                        {
+                            try
+                            {
+                                var e = _doc.GetElement(id);
+                                if (e?.Category?.Id == null) { skipped++; continue; }
+                                if (!selectedCategories.Any(c => c.CategoryId == e.Category.Id)) { skipped++; continue; }
 
-                        // Bỏ qua những cái không hợp lệ / không hỗ trợ
-                        if (catId == ElementId.InvalidElementId || !CanOverrideCategory(catId))
-                        {
-                            skipped++;
-                            continue;
+                                if (TryClearElementOverrides(id)) cleared++;
+                                else skipped++;
+                            }
+                            catch { failed++; }
                         }
+                    }
+                    else
+                    {
+                        foreach (var cat in selectedCategories)
+                        {
+                            var elemIds = new FilteredElementCollector(_doc, _view.Id)
+                                .OfCategoryId(cat.CategoryId)
+                                .WhereElementIsNotElementType()
+                                .ToElementIds();
 
-                        try
-                        {
-                            _view.SetCategoryOverrides(catId, resetOgs);
-                            cleared++;
-                        }
-                        catch (Autodesk.Revit.Exceptions.ArgumentException)
-                        {
-                            // ví dụ: "Category cannot be overridden"
-                            skipped++;
-                        }
-                        catch
-                        {
-                            failed++;
+                            foreach (var id in elemIds)
+                            {
+                                if (TryClearElementOverrides(id)) cleared++;
+                                else skipped++;
+                            }
                         }
                     }
 
                     t.Commit();
                 }
 
-                TaskDialog.Show(
-                    "Kết quả",
-                    $"Đã xóa override: {cleared}\nBỏ qua (không hỗ trợ): {skipped}\nThất bại khác: {failed}"
-                );
+                TaskDialog.Show("Result",
+                    $"Reset overrides for {cleared} elements.\nSkipped: {skipped}\nOther failures: {failed}");
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Lỗi", "Không thể xóa override: " + ex.Message);
+                TaskDialog.Show("Error", "Could not clear overrides (By Element): " + ex.Message);
             }
         }
-
 
         // ===================================================
         // Rehook property changed events
