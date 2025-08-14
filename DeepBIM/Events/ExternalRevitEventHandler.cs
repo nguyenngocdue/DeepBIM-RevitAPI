@@ -18,7 +18,7 @@ namespace DeepBIM.Events
 
         public string GetName()
         {
-            return "External Revit Event Handler";
+            return "External Revit Event Handler (DeepBIM EventHandler)";
         }
 
         public void SetAction(Action<UIApplication> action)

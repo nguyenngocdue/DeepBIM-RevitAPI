@@ -68,6 +68,10 @@
     <ItemGroup>
         <!-- Revit References -->
         <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739">
+          <PrivateAssets>True</PrivateAssets>
+          <GeneratePathProperty>True</GeneratePathProperty>
+        </PackageReference>
         <PackageReference Include="MaterialDesignColors" Version="5.2.2-ci998" />
         <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
         <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" />

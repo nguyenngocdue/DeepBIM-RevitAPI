@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="DeepBIM - Smart Selection"
         Height="885"
@@ -130,15 +131,31 @@
             </Border>
 
 
-            <!-- === RIGHT COLUMN: Filters & Options === -->
-            <StackPanel Grid.Column="1">
-                <!-- Selection Scope -->
+            <!-- === RIGHT COLUMN: MAKE COLORS === -->
+            <StackPanel Grid.Column="1" Margin="10">
+                <TextBlock Text="Chọn màu tô:" FontWeight="SemiBold" Margin="0,0,0,5"/>
 
-                <!-- Filter by Properties -->
+                <!-- Các nút màu -->
+                <WrapPanel Margin="0,0,0,10">
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Red"      Command="{Binding SetColorCommand}" CommandParameter="Red" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Green"    Command="{Binding SetColorCommand}" CommandParameter="Green" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Blue"     Command="{Binding SetColorCommand}" CommandParameter="Blue" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Yellow"   Command="{Binding SetColorCommand}" CommandParameter="Yellow" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Orange"   Command="{Binding SetColorCommand}" CommandParameter="Orange" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Purple"   Command="{Binding SetColorCommand}" CommandParameter="Purple" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Cyan"     Command="{Binding SetColorCommand}" CommandParameter="Cyan" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Pink"     Command="{Binding SetColorCommand}" CommandParameter="Pink" />
+                    <Button Style="{StaticResource ColorButtonStyle}" Background="Gray"     Command="{Binding SetColorCommand}" CommandParameter="Gray" />
+                </WrapPanel>
 
-                <!-- Advanced Options -->
-
-                <!-- Preview -->
+                <!-- Nút áp dụng màu -->
+                <Button 
+                        Content="Apply - Colorize Elements"
+                        Command="{Binding ApplyColorCommand}"
+                        Background="#007ACC"
+                        Foreground="White"
+                        Padding="10 5"
+                        HorizontalAlignment="Stretch"/>
             </StackPanel>
         </Grid>
 
