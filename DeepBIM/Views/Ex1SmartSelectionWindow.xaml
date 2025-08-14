@@ -33,7 +33,7 @@
             <Color x:Key="HoverColor">#42A5F5</Color>
             <Color x:Key="SelectedColor">#1976D2</Color>
             <Color x:Key="AccentColor">#0288D1</Color>
-            
+
         </ResourceDictionary>
     </Window.Resources>
 
@@ -90,17 +90,17 @@
                          Style="{StaticResource WatermarkTextBox}"
                          Tag="🔎  Search Category. Press Enter to apply search."
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="0,10,0,8">     
+                         Margin="0,10,0,8">
                         <TextBox.InputBindings>
                             <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
                         </TextBox.InputBindings>
                     </TextBox>
 
                     <Border Grid.Row="2" 
-        BorderBrush="{StaticResource CardBorder}" 
-        BorderThickness="1" 
-        CornerRadius="6" 
-        Padding="6">
+                    BorderBrush="{StaticResource CardBorder}" 
+                    BorderThickness="1" 
+                    CornerRadius="6" 
+                    Padding="6">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -135,28 +135,35 @@
             <StackPanel Grid.Column="1" Margin="10">
                 <TextBlock Text="Chọn màu tô:" FontWeight="SemiBold" Margin="0,0,0,5"/>
 
-                <!-- Các nút màu -->
-                <WrapPanel Margin="0,0,0,10">
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Red"      Command="{Binding SetColorCommand}" CommandParameter="Red" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Green"    Command="{Binding SetColorCommand}" CommandParameter="Green" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Blue"     Command="{Binding SetColorCommand}" CommandParameter="Blue" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Yellow"   Command="{Binding SetColorCommand}" CommandParameter="Yellow" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Orange"   Command="{Binding SetColorCommand}" CommandParameter="Orange" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Purple"   Command="{Binding SetColorCommand}" CommandParameter="Purple" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Cyan"     Command="{Binding SetColorCommand}" CommandParameter="Cyan" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Pink"     Command="{Binding SetColorCommand}" CommandParameter="Pink" />
-                    <Button Style="{StaticResource ColorButtonStyle}" Background="Gray"     Command="{Binding SetColorCommand}" CommandParameter="Gray" />
-                </WrapPanel>
+                <!-- ColorPicker -->
+                <xctk:ColorPicker
+                    SelectedColor="{Binding SelectedColor, Mode=TwoWay}"
+                    DisplayColorAndName="True"
+                    UsingAlphaChannel="False"
+                    AvailableColorsSortingMode="HueSaturationBrightness"
+                    Margin="0,0,0,10"/>
 
-                <!-- Nút áp dụng màu -->
-                <Button 
-                        Content="Apply - Colorize Elements"
-                        Command="{Binding ApplyColorCommand}"
-                        Background="#007ACC"
-                        Foreground="White"
-                        Padding="10 5"
-                        HorizontalAlignment="Stretch"/>
+                <!-- Transparency -->
+                <TextBlock Text="Độ trong suốt (0–90):" Margin="0,0,0,5"/>
+                <Slider Minimum="0" Maximum="90" TickFrequency="10" IsSnapToTickEnabled="True"
+                        Value="{Binding SelectedTransparency, Mode=TwoWay}" />
+                <TextBlock Text="{Binding SelectedTransparency, StringFormat='Transparency: {0}%'}"
+                            Margin="0,4,0,10" Foreground="#555"/>
+
+                <!-- Halftone -->
+                <CheckBox Content="Halftone" IsChecked="{Binding IsHalftone, Mode=TwoWay}" Margin="0,0,0,10"/>
+
+                <!-- Buttons -->
+                <StackPanel Orientation="Horizontal" >
+                    <Button Content="Apply - Colorize Categories"
+                            Command="{Binding ApplyColorCommand}"
+                            Padding="10 6"/>
+                    <Button Content="Clear - Reset Overrides"
+                            Command="{Binding ClearOverridesCommand}"
+                            Padding="10 6"/>
+                </StackPanel>
             </StackPanel>
+
         </Grid>
 
         <!-- ===== CONTROL BUTTONS ===== -->
