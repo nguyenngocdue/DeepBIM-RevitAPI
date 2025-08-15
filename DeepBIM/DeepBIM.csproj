@@ -52,7 +52,7 @@
     <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
     <PropertyGroup>
         <IsRepackable>false</IsRepackable>
-        <DeployRevitAddin>true</DeployRevitAddin>
+        <DeployRevitAddin>false</DeployRevitAddin>
     </PropertyGroup>
     <ItemGroup>
       <None Remove="Resources\Icons\logo-deepbim.png" />
