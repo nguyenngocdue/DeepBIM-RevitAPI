@@ -40,7 +40,7 @@
     <PropertyGroup>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
       
         <StartAction>Program</StartAction>
       <!-- <StartProgram>C:\Program Files\Autodesk\Revit $(RevitVersion)\Revit.exe</StartProgram> -->
@@ -52,9 +52,18 @@
     <!-- https://github.com/Nice3point/Revit.Build.Tasks -->
     <PropertyGroup>
         <IsRepackable>false</IsRepackable>
-        <DeployRevitAddin>false</DeployRevitAddin>
+        <DeployRevitAddin>true</DeployRevitAddin>
     </PropertyGroup>
     <ItemGroup>
+      <None Remove="Resources\Icons\align-bottom-16.png" />
+      <None Remove="Resources\Icons\align-center-16.png" />
+      <None Remove="Resources\Icons\align-left-16.png" />
+      <None Remove="Resources\Icons\align-left24.png" />
+      <None Remove="Resources\Icons\align-middle-16.png" />
+      <None Remove="Resources\Icons\align-right-16.png" />
+      <None Remove="Resources\Icons\align-top-16.png" />
+      <None Remove="Resources\Icons\distribute-horizontal-16.png" />
+      <None Remove="Resources\Icons\distribute-vertical-16.png" />
       <None Remove="Resources\Icons\logo-deepbim.png" />
       <None Remove="Resources\Icons\logo.png" />
       <None Remove="Resources\Icons\management16.png" />
@@ -63,8 +72,23 @@
       <None Remove="Resources\Icons\paint-palette32.png" />
       <None Remove="Resources\Icons\plus16.png" />
       <None Remove="Resources\Icons\plus32.png" />
+      <None Remove="Resources\Icons\setting-align-16.png" />
+      <None Remove="Resources\Icons\setting-align-24.png" />
+      <None Remove="Resources\Icons\setting-align-32.png" />
       <None Remove="Resources\Icons\sheet-manage26.png" />
       <None Remove="Resources\Icons\sheet-manage32.png" />
+      <None Remove="Resources\Icons\untangle-hori-24.png" />
+      <None Remove="Resources\Icons\untangle-vertical-16.png" />
+    </ItemGroup>
+    <ItemGroup>
+      <Resource Include="Resources\Icons\align-center-16.png" />
+      <Resource Include="Resources\Icons\align-middle-16.png" />
+      <Resource Include="Resources\Icons\align-right-16.png" />
+    </ItemGroup>
+    <ItemGroup>
+      <Resource Include="Resources\Icons\align-bottom-16.png" />
+      <Resource Include="Resources\Icons\align-left-16.png" />
+      <Resource Include="Resources\Icons\align-top-16.png" />
     </ItemGroup>
 
     <ItemGroup>
@@ -76,6 +100,7 @@
         </PackageReference>
         <PackageReference Include="MaterialDesignColors" Version="5.2.2-ci998" />
         <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4-beta1" />
         <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" />
         <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*" />
         <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
@@ -88,8 +113,20 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Resource Include="Resources\Icons\paint-palette16.png" />
-      <Resource Include="Resources\Icons\paint-palette32.png" />
+      <Resource Include="Resources\Icons\align-left24.png" />
+      <Resource Include="Resources\Icons\distribute-horizontal-16.png" />
+      <Resource Include="Resources\Icons\distribute-vertical-16.png" />
+      <Resource Include="Resources\Icons\paint-palette16.png">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Resource>
+      <Resource Include="Resources\Icons\paint-palette32.png">
+        <CopyToOutputDirectory></CopyToOutputDirectory>
+      </Resource>
+      <Resource Include="Resources\Icons\setting-align-16.png" />
+      <Resource Include="Resources\Icons\setting-align-24.png" />
+      <Resource Include="Resources\Icons\setting-align-32.png" />
+      <Resource Include="Resources\Icons\untangle-hori-24.png" />
+      <Resource Include="Resources\Icons\untangle-vertical-16.png" />
       <Resource Include="Resources\Jsons\DeepBIM.ribbon.json" />
         <Resource Include="Resources\Icons\logo.png" />
         <Resource Include="Resources\Icons\management16.png" />

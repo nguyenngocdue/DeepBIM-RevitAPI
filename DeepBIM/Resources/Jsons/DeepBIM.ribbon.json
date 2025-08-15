@@ -47,12 +47,14 @@
           "type": "push",
           "label": "Override Color",
           "command": "DeepBIM.Commands.Ex1SmartSelectionCommand",
-          "smallImage": "Resources/Icons/paint-palette16.png",
-          "largeImage": "Resources/Icons/paint-palette32.png",
+          "smallImage": "Resources/Icons/setting-align-16.png",
+          "largeImage": "Resources/Icons/setting-align-24.png",
           "tooltip": "Open the Smart Selection tool",
           "longDescription": "Allows selecting elements based on predefined rules and filters."
         }
       ]
     }
+  
+    
   ]
 }

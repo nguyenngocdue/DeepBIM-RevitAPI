@@ -20,8 +20,11 @@
     <SolidColorBrush x:Key="TextSecondary" Color="#666666"/>
     <SolidColorBrush x:Key="Placeholder" Color="#9A9A9A"/>
 
+    <!-- Duration -->
+    <Duration x:Key="AnimationDuration">0:00:0.2</Duration>
 
-<!-- === Brushes === -->
+
+    <!-- === Brushes === -->
     <SolidColorBrush x:Key="ShadcnPrimaryBg" Color="#59DCCB"/>
 <SolidColorBrush x:Key="ShadcnPrimaryBorder" Color="#2FB3A5"/>
 <SolidColorBrush x:Key="ShadcnPrimaryHoverBg" Color="#2FB3A5"/>
