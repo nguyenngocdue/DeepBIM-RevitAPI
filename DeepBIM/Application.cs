@@ -1,101 +1,108 @@
 ﻿using Autodesk.Revit.UI;
-using DeepBIM.Commands;
+using DeepBIM.RibbonConfigs;
 using Nice3point.Revit.Toolkit.External;
-using System.Windows;
-using System.Windows.Media.Imaging;
+using System;
+using System.Linq;
+using System.Reflection;
 
 namespace DeepBIM
 {
-    /// <summary>
-    ///     Application entry point
-    /// </summary>
+    /// <summary>Revit add-in entry</summary>
     [UsedImplicitly]
     public class Application : ExternalApplication
     {
-        public static object Current { get; internal set; }
-
         public override void OnStartup()
         {
-            CreateRibbon();
+            try
+            {
+                CreateRibbonFromJson();
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("DeepBIM Ribbon", $"Failed to create ribbon: {ex.Message}");
+            }
         }
 
-        private void CreateRibbon()
+        private void CreateRibbonFromJson()
         {
-            var panel = Application.CreatePanel("Commands", "DeepBIM");
+            // Đổi tên file/đường dẫn nếu bạn muốn
+            var cfg = RibbonHelpers.LoadConfig("Resources/Jsons/DeepBIM.ribbon.json");
 
-            
-            
-            panel.AddPushButton<StartupCommand>("Execute")
-                .SetImage("/DeepBIM;component/Resources/Icons/RibbonIcon16.png")
-                .SetLargeImage("/DeepBIM;component/Resources/Icons/RibbonIcon32.png");
+            foreach (var panelCfg in cfg.Panels ?? Enumerable.Empty<RibbonPanelConfig>())
+            {
+                // Nice3point Toolkit: Application.CreatePanel(panelName, tabName)
+                var panel = Application.CreatePanel(panelCfg.Name, cfg.Tab);
 
-            //panel.AddPushButton<SheetManagerCommand>("Execute")
-            //  .SetImage("/DeepBIM;component/Resources/Icons/sheet-manage26.png")
-            //  .SetLargeImage("/DeepBIM;component/Resources/Icons/sheet-manage32.png");
+                foreach (var item in panelCfg.Items ?? Enumerable.Empty<RibbonItemConfig>())
+                {
+                    var t = (item.Type ?? "").ToLowerInvariant();
+                    if (t == "push") AddPush(panel, item);
+                    else if (t == "pulldown") AddPulldown(panel, item);
+                }
+            }
+        }
 
+        private void AddPush(RibbonPanel panel, RibbonItemConfig item)
+        {
+            string assemblyPath = Assembly.GetExecutingAssembly().Location;
 
-            // Tạo dữ liệu cho pulldown
-            PulldownButtonData pulldownBtnData = new PulldownButtonData(
-                "SheetPulldown",
-                "Sheet Tools");
-
-            // Tạo pulldown button
-            PulldownButton pulldownBtn = panel.AddItem(pulldownBtnData) as PulldownButton;
-            // Set icon
-            pulldownBtn.Image = new BitmapImage(new Uri("pack://application:,,,/DeepBIM;component/Resources/Icons/sheet-manage26.png"));
-            pulldownBtn.LargeImage = new BitmapImage(new Uri("pack://application:,,,/DeepBIM;component/Resources/Icons/sheet-manage32.png"));
-
-            String assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            // Creation command
-            PushButtonData creationData = new PushButtonData(
-                "SheetCreation",
-                "Creation",
-                assemblyPath,
-                "DeepBIM.Commands.SheetCreationCommand"
+            var pbd = new PushButtonData(
+                name: RibbonHelpers.SanitizeName(item.Label),
+                text: item.Label,
+                assemblyName: assemblyPath,
+                className: item.Command
             )
             {
-                ToolTip = "Create new sheets from template or Excel mapping.",
-                LongDescription = "Creates new sheets in batch with numbering rules, title block selection, and optional view placement.",
-                ToolTipImage = new BitmapImage(new Uri(
-                    "pack://application:,,,/DeepBIM;component/Resources/Icons/plus32.png"
-                ))
+                ToolTip = item.Tooltip,
+                LongDescription = item.LongDescription
             };
 
-            PushButton btnCreation = pulldownBtn.AddPushButton(creationData) as PushButton;
-            btnCreation.Image = new BitmapImage(new Uri(
-                "pack://application:,,,/DeepBIM;component/Resources/Icons/plus16.png"
-            ));
-            btnCreation.LargeImage = new BitmapImage(new Uri(
-                "pack://application:,,,/DeepBIM;component/Resources/Icons/plus32.png"
-            ));
+            var tipImg = RibbonHelpers.LoadImage(item.TooltipImage);
+            if (tipImg != null) pbd.ToolTipImage = tipImg;
 
-            // Manage command
-            PushButtonData manageData = new PushButtonData(
-                "SheetManage",
-                "Manage",
-                assemblyPath,
-                "DeepBIM.Commands.SheetManagerCommand"
-            )
+            var push = panel.AddItem(pbd) as PushButton;
+            if (push != null)
+                RibbonHelpers.SafeSetImages(push, item.SmallImage, item.LargeImage);
+        }
+
+
+        private void AddPulldown(RibbonPanel panel, RibbonItemConfig item)
+        {
+            var pdData = new PulldownButtonData(
+                RibbonHelpers.SanitizeName(item.Label),
+                item.Label
+            );
+
+            var pd = panel.AddItem(pdData) as PulldownButton;
+            if (pd == null) return;
+
+            RibbonHelpers.SafeSetImages(pd, item.SmallImage, item.LargeImage);
+
+            string assemblyPath = Assembly.GetExecutingAssembly().Location;
+
+            foreach (var child in item.Children?.Where(c => (c.Type ?? "").ToLowerInvariant() == "push")
+                     ?? Enumerable.Empty<RibbonItemConfig>())
             {
-                ToolTip = "Bulk rename or renumber existing sheets.",
-                LongDescription = "Search/replace, add prefix/suffix, and reorder sheet numbers safely with preview before applying.",
-                ToolTipImage = new BitmapImage(new Uri(
-                    "pack://application:,,,/DeepBIM;component/Resources/Icons/management32.png"
-                ))
-            };
+                var childData = new PushButtonData(
+                    RibbonHelpers.SanitizeName(child.Label),
+                    child.Label,
+                    assemblyPath,
+                    child.Command
+                )
+                {
+                    ToolTip = child.Tooltip,
+                    LongDescription = child.LongDescription
+                };
 
-            PushButton btnManage = pulldownBtn.AddPushButton(manageData) as PushButton;
-            btnManage.Image = new BitmapImage(new Uri(
-                "pack://application:,,,/DeepBIM;component/Resources/Icons/management16.png"
-            ));
-            btnManage.LargeImage = new BitmapImage(new Uri(
-                "pack://application:,,,/DeepBIM;component/Resources/Icons/management32.png"
-            ));
+                var tipImg = RibbonHelpers.LoadImage(child.TooltipImage);
+                if (tipImg != null) childData.ToolTipImage = tipImg;
 
-
-
-
-
+                var childBtn = pd.AddPushButton(childData) as PushButton;
+                if (childBtn != null)
+                {
+                    RibbonHelpers.SafeSetImages(childBtn, child.SmallImage, child.LargeImage);
+                }
+            }
         }
     }
 }

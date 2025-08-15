@@ -1,0 +1,58 @@
+﻿{
+  "tab": "DeepBIM",
+  "panels": [
+    {
+      "name": "Sheet Management",
+      "items": [
+        {
+          "type": "push",
+          "label": "Execute",
+          "command": "DeepBIM.Commands.StartupCommand",
+          "smallImage": "Resources/Icons/RibbonIcon16.png",
+          "largeImage": "Resources/Icons/RibbonIcon32.png",
+          "tooltip": "Run DeepBIM startup command"
+        },
+        {
+          "type": "pulldown",
+          "label": "Sheet Tools",
+          "smallImage": "Resources/Icons/sheet-manage26.png",
+          "largeImage": "Resources/Icons/sheet-manage32.png",
+          "children": [
+            {
+              "type": "push",
+              "label": "Creation",
+              "command": "DeepBIM.Commands.SheetCreationCommand",
+              "smallImage": "Resources/Icons/plus16.png",
+              "largeImage": "Resources/Icons/plus32.png",
+              "tooltip": "Create new sheets",
+              "longDescription": "Batch create sheets with numbering rules"
+            },
+            {
+              "type": "push",
+              "label": "Manage",
+              "command": "DeepBIM.Commands.SheetManagerCommand",
+              "smallImage": "Resources/Icons/management16.png",
+              "largeImage": "Resources/Icons/management32.png",
+              "tooltip": "Bulk rename/renumber sheets",
+              "longDescription": "Search/replace, prefix/suffix, reorder safely"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Visibility",
+      "items": [
+        {
+          "type": "push",
+          "label": "Override Color",
+          "command": "DeepBIM.Commands.Ex1SmartSelectionCommand",
+          "smallImage": "Resources/Icons/paint-palette16.png",
+          "largeImage": "Resources/Icons/paint-palette32.png",
+          "tooltip": "Open the Smart Selection tool",
+          "longDescription": "Allows selecting elements based on predefined rules and filters."
+        }
+      ]
+    }
+  ]
+}
