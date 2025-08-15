@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.UI;
+using DeepBIM.Utils;
 using DeepBIM.ViewModels;
 using System;
 using System.Collections.ObjectModel;
@@ -19,6 +20,8 @@ namespace DeepBIM.Views
         private Ex1SmartSelectionViewModel viewModel;
         public Ex1SmartSelectionWindow(UIApplication uiapp, UIDocument uidoc, Document doc)
         {
+            SystemLoadManager.LoadXceedToolkit(@"B:\C# Tool Revit\DeepBIM\DeepBIM\bin\Debug R25");
+            SystemLoadManager.LoadBehaviors(@"B:\C# Tool Revit\DeepBIM\DeepBIM\bin\Debug R25");
             InitializeComponent();
             viewModel = new Ex1SmartSelectionViewModel(uiapp, uidoc, doc);
             this.DataContext = viewModel;

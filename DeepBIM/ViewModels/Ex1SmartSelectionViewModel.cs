@@ -419,8 +419,7 @@ namespace DeepBIM.ViewModels
                     t.Commit();
                 }
 
-                TaskDialog.Show("Result",
-                    $"Colored {applied} elements.\nSkipped {skipped} elements that could not be overridden.");
+                //TaskDialog.Show("Result", $"Colored {applied} elements.\nSkipped {skipped} elements that could not be overridden.");
             }
             catch (Exception ex)
             {
@@ -519,8 +518,7 @@ namespace DeepBIM.ViewModels
                     t.Commit();
                 }
 
-                TaskDialog.Show("Result",
-                    $"Reset overrides for {cleared} elements.\nSkipped: {skipped}\nOther failures: {failed}");
+                //TaskDialog.Show("Result",$"Reset overrides for {cleared} elements.\nSkipped: {skipped}\nOther failures: {failed}");
             }
             catch (Exception ex)
             {
