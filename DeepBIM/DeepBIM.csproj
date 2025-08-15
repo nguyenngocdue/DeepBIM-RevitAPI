@@ -59,6 +59,8 @@
       <None Remove="Resources\Icons\logo.png" />
       <None Remove="Resources\Icons\management16.png" />
       <None Remove="Resources\Icons\management32.png" />
+      <None Remove="Resources\Icons\paint-palette16.png" />
+      <None Remove="Resources\Icons\paint-palette32.png" />
       <None Remove="Resources\Icons\plus16.png" />
       <None Remove="Resources\Icons\plus32.png" />
       <None Remove="Resources\Icons\sheet-manage26.png" />
@@ -86,6 +88,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Resource Include="Resources\Icons\paint-palette16.png" />
+      <Resource Include="Resources\Icons\paint-palette32.png" />
       <Resource Include="Resources\Jsons\DeepBIM.ribbon.json" />
         <Resource Include="Resources\Icons\logo.png" />
         <Resource Include="Resources\Icons\management16.png" />
