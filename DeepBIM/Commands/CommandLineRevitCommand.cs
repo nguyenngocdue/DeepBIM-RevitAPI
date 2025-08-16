@@ -1,13 +1,21 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
+using DeepBIM.Services;
 using DeepBIM.Views;
+using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Interop;
+
+
 
 namespace DeepBIM.Commands
 {
     [Transaction(TransactionMode.Manual)]
+    //[Regeneration(RegenerationOption.Manual)]
     public class CommandLineRevitCommand : IExternalCommand
     {
+        
         public Result Execute(
             ExternalCommandData commandData,
             ref string message,
@@ -15,21 +23,18 @@ namespace DeepBIM.Commands
         {
             try
             {
-                UIApplication uiapp = commandData.Application;
-                UIDocument uidoc = uiapp.ActiveUIDocument;
-                Document doc = uidoc.Document;
+                var uiapp = commandData.Application;
 
-                //// ✅ Lấy danh sách đã chọn
-                //var selectedIds = uidoc.Selection.GetElementIds();
-
-                //// Khởi tạo Window + ViewModel
-                //var win = new DeepBIM.Views.SheetManagerWindow(uiapp, doc); // Pass 'uiapp' as required by the constructor
-                //win.DataContext = new DeepBIM.ViewModels.SheetManagerViewModel(doc, uidoc, selectedIds);
-
-                //// Đặt owner là Revit để form modal và luôn trên cùng
-                //new WindowInteropHelper(win) { Owner = uiapp.MainWindowHandle };
-
-                //win.ShowDialog();   // hoặc .Show() nếu muốn non‑modal
+                // Đăng ký 1 lần rồi gỡ
+                EventHandler<IdlingEventArgs> handler = null;
+                handler = (s, e) =>
+                {
+                    uiapp.Idling -= handler;              // gỡ ngay tránh lặp
+                    DeepBIM.Services.RibbonCommandCatalog.RefreshOnce(); // quét bằng reflection
+                    var win = new DeepBIM.Views.CommandLineRevitWindow(uiapp, DeepBIM.Services.RibbonCommandCatalog.Items);
+                    win.Show(); // non-modal để không block Idling
+                };
+                uiapp.Idling += handler;
                 return Result.Succeeded;
             }
             catch (Exception ex)

@@ -1,0 +1,60 @@
+﻿<UserControl x:Class="DeepBIM.Views.CustomControls.ComboBoxAC"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DeepBIM.Views.CustomControls"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration="0:0:0.5" />
+        </Storyboard>
+    </UserControl.Resources>
+    <Border
+        x:Name="border"
+        Padding="0"
+        BorderBrush="Black"
+        BorderThickness=".5">
+        <ComboBox
+            x:Name="comboBoxAutoComplete"
+            Padding="3,9,0,0"
+            ContextMenuOpening="comboBoxAutoComplete_ContextMenuOpening"
+            DisplayMemberPath="{Binding DisplayMemberPath, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            FontWeight="{Binding FontWeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            GotFocus="comboBoxAutoComplete_GotFocus"
+            IsEditable="True"
+            IsTextSearchCaseSensitive="False"
+            IsTextSearchEnabled="False"
+            ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            KeyUp="comboBoxAutoComplete_KeyUp"
+            Loaded="comboBoxAutoComplete_Loaded"
+            LostFocus="comboBoxAutoComplete_LostFocus"
+            PreviewKeyDown="comboBoxAutoComplete_PreviewKeyDown"
+            PreviewTextInput="comboBoxAutoComplete_PreviewTextInput"
+            SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            SelectedValuePath="{Binding SelectedValuePath, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            SelectionChanged="comboBoxAutoComplete_SelectionChanged">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            Width="250"
+                            FontWeight="Bold"
+                            Text="{Binding DisplayName}"
+                            ToolTip="{Binding Description}" />
+                        <TextBlock
+                            Foreground="Gray"
+                            Text="{Binding Description}"
+                            ToolTip="{Binding Description}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+    </Border>
+</UserControl>
