@@ -79,11 +79,22 @@ namespace DeepBIM.Components.Panels
                 asm,
                 "DeepBIM.Commands.SettingsCommand"
             );
-            pbdSetting.Image = RibbonHelpers.LoadImage($"{ICON_FOLDER}/setting-align-16.png");
+            pbdSetting.Image = RibbonHelpers.LoadImage($"{ICON_FOLDER}/setting-align-32.png");
             pbdSetting.ToolTip = "Open Settings";
 
             // Chỉ 1 nút thì dùng AddItem
             panel.AddItem(pbdSetting);
+
+
+            var pbdMatchOri = new PushButtonData(
+                  "MatchOrientationBtn", "Match\nOrientation",
+                  asm, "DeepBIM.Commands.MatchOrientationCommand");
+            pbdMatchOri.Image = RibbonHelpers.LoadImage("Resources/Icons/match-orientation16.png");
+            pbdMatchOri.ToolTip = "Copy the rotation of a base element to other selected elements.";
+
+            panel.AddItem(pbdMatchOri);   // ✅ thay vì AddStackedItems
+
+
         }
     }
 }

@@ -9,6 +9,12 @@ namespace DeepBIM.Helpers
 {
     public class AlignService : IAlignService
     {
+        class TagSelectionFilter : Autodesk.Revit.UI.Selection.ISelectionFilter
+        {
+            public bool AllowElement(Element elem) => elem is IndependentTag;
+            public bool AllowReference(Reference reference, XYZ position) => true;
+        }
+
         public Result AlignElements(UIDocument uiDoc, Document doc, AlignType alignType, double? minGap = null)
         {
             using var txg = new TransactionGroup(doc, "Align Elements");
@@ -23,6 +29,15 @@ namespace DeepBIM.Helpers
 
                 // 1. Lấy danh sách phần tử đã chọn
                 List<ElementId> ids = uiDoc.Selection.GetElementIds().ToList();
+
+                // ====== NHÁNH DÀNH CHO TAGS (chọn 1 tag làm chuẩn trước) ======
+                if (alignType == AlignType.AlignTagsVertically || alignType == AlignType.AlignTagsHorizontally)
+                {
+                    HandleTagAlignment(uiDoc, doc, alignType, txg);
+                }
+                // ====== HẾT NHÁNH TAGS ======
+
+
 
                 // Nếu chọn ít hơn 2 phần tử → yêu cầu pick
                 if (ids.Count < 2)
@@ -255,6 +270,49 @@ namespace DeepBIM.Helpers
             return Math.Abs(v.X) < tolerance &&
                    Math.Abs(v.Y) < tolerance &&
                    Math.Abs(v.Z) < tolerance;
+        }
+
+        private Result HandleTagAlignment(UIDocument uiDoc, Document doc, AlignType alignType, TransactionGroup txg)
+        {
+            var sel = uiDoc.Selection;
+            ISelectionFilter tagFilter = new TagSelectionFilter();
+
+            // 1) Pick base tag
+            Reference baseRef = sel.PickObject(ObjectType.Element, tagFilter,
+                "Pick the BASE tag (reference).");
+            var baseTag = doc.GetElement(baseRef.ElementId) as IndependentTag
+                          ?? throw new OperationCanceledException("Base selection is not a tag.");
+
+            // 2) Pick other tags
+            var picked = sel.PickObjects(ObjectType.Element, tagFilter,
+                "Pick other tags to align to the base tag (ESC to finish).");
+
+            var otherTagIds = picked.Select(r => r.ElementId)
+                                    .Where(id => id != baseTag.Id)
+                                    .Distinct()
+                                    .ToList();
+            if (otherTagIds.Count < 1)
+                throw new OperationCanceledException("Please pick at least one more tag.");
+
+            var otherTags = otherTagIds.Select(id => doc.GetElement(id))
+                                       .OfType<IndependentTag>()
+                                       .ToList();
+
+            // Base + others
+            var tags = new List<IndependentTag>(1 + otherTags.Count) { baseTag };
+            tags.AddRange(otherTags);
+
+            bool vertical = (alignType == AlignType.AlignTagsVertically);
+
+            using (var t = new Transaction(doc, vertical ? "Align Tags Vertically" : "Align Tags Horizontally"))
+            {
+                t.Start();
+                AlignTags.AlignTagElements(tags, doc.ActiveView, vertical);
+                t.Commit();
+            }
+
+            txg.Assimilate();
+            return Result.Succeeded;
         }
     }
 }

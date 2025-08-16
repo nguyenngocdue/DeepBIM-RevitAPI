@@ -14,7 +14,10 @@ namespace DeepBIM.Helpers
         DistributeHorizontally,
         DistributeVertically,
         UntangleHorizontally, 
-        UntangleVertically    
+        UntangleVertically,
+        TagVertically,
+        AlignTagsVertically,    
+        AlignTagsHorizontally  
     }
 
     public interface IAlignService
