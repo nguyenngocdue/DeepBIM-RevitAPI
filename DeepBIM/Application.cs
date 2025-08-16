@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.UI;
+using DeepBIM.Components.Panels;
 using DeepBIM.RibbonConfigs;
 using Nice3point.Revit.Toolkit.External;
 using System;
@@ -16,6 +17,7 @@ namespace DeepBIM
             try
             {
                 CreateRibbonFromJson();
+                AlignPanel.CreateAlignPanel(this.Application);
             }
             catch (Exception ex)
             {
@@ -104,5 +106,7 @@ namespace DeepBIM
                 }
             }
         }
+
     }
+
 }
