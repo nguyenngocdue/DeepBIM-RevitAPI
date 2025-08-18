@@ -20,7 +20,20 @@ namespace DeepBIM.Utils
         }
 
         /// <summary>
-        /// Load Microsoft.Xaml.Behaviors.dll (nếu bạn dùng behaviors trong XAML)
+        /// Load các assembly MaterialDesign (Themes + Colors).
+        /// Truyền thêm hintDir nếu muốn ưu tiên một thư mục cụ thể (vd: "B:\\...\\bin\\Debug R25").
+        /// </summary>
+        public static void LoadMaterialDesign(string hintDir = null)
+        {
+            var hintDirs = BuildProbeDirs(hintDir);
+
+            // Load lần lượt
+            TryLoadAssembly("MaterialDesignThemes.Wpf.dll", hintDirs);
+            TryLoadAssembly("MaterialDesignColors.dll", hintDirs);
+        }
+
+        /// <summary>
+        /// Load Microsoft.Xaml.Behaviors.dll (nếu bạn dùng behaviors trong XAML).
         /// </summary>
         public static void LoadBehaviors(string hintDir = null)
         {
@@ -69,7 +82,7 @@ namespace DeepBIM.Utils
             }
             catch { }
 
-            // 4) Thư mục gợi ý (ví dụ: B:\...\bin\Debug R25)
+            // 4) Thư mục gợi ý (ví dụ: bin\Debug R25)
             if (!string.IsNullOrWhiteSpace(hintDir))
                 dirs.Add(hintDir);
 
