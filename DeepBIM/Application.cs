@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.UI;
 using DeepBIM.Components.Panels;
 using DeepBIM.RibbonConfigs;
+using DeepBIM.Utils;
 using Nice3point.Revit.Toolkit.External;
 using System;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace DeepBIM
         {
             try
             {
+                SystemLoadManager.LoadMaterialDesign(@"B:\C# Tool Revit\DeepBIM\DeepBIM\bin\Debug R25");
+                SystemLoadManager.LoadBehaviors(@"B:\C# Tool Revit\DeepBIM\DeepBIM\bin\Debug R25");
                 CreateRibbonFromJson();
                 AlignPanel.CreateAlignPanel(this.Application);
             }
